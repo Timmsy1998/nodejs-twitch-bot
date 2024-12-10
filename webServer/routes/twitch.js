@@ -1,4 +1,4 @@
-const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
+const { resolvePath } = require("../../pathHelper"); // Importing resolvePath from pathHelper.js
 const { logError, logInfo } = require(resolvePath("logger.js")); // Shared logger from the root
 
 const setupTwitchRoutes = (app) => {

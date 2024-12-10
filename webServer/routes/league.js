@@ -1,3 +1,4 @@
+const { resolvePath } = require("../../pathHelper");
 const {
   getAccountByRiotId,
   getSummonerByPuuid,

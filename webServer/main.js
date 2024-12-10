@@ -1,5 +1,5 @@
 const express = require("express");
-const { resolvePath } = require("../../pathHelper"); // Importing resolvePath from pathHelper.js
+const { resolvePath } = require("../pathHelper"); // Importing resolvePath from pathHelper.js
 const setupSpotifyRoutes = require(resolvePath("webServer/routes/spotify")); // Setup Spotify-related routes
 const setupTwitchRoutes = require(resolvePath("webServer/routes/twitch")); // Setup Twitch-related routes
 const setupLeagueRoutes = require(resolvePath("webServer/routes/league")); // Setup League of Legends-related routes

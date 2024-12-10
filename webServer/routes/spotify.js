@@ -1,6 +1,6 @@
 const axios = require("axios");
 const fs = require("fs");
-const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
+const { resolvePath } = require("../../pathHelper"); // Importing resolvePath from pathHelper.js
 const querystring = require("querystring");
 const config = require(resolvePath("global.js")); // Import shared global configuration
 const { logError, logInfo } = require(resolvePath("logger.js")); // Import shared logger
