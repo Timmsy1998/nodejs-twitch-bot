@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Now Playing</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #121212;
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      .now-playing {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        border-radius: 20px;
+        width: 350px;
+        height: 70px;
+        overflow: hidden;
+        position: relative;
+        background-color: #000;
+        box-shadow: 0 0 15px rgba(255, 0, 0, 0.8), 0 0 15px rgba(0, 255, 0, 0.8),
+          0 0 15px rgba(0, 0, 255, 0.8);
+        animation: rgbGlow 6s linear infinite;
+      }
+      @keyframes rgbGlow {
+        0%,
+        100% {
+          box-shadow: 0 0 15px rgba(255, 0, 0, 0.8),
+            0 0 15px rgba(0, 255, 0, 0.8), 0 0 15px rgba(0, 0, 255, 0.8);
+        }
+        33% {
+          box-shadow: 0 0 15px rgba(0, 255, 0, 0.8),
+            0 0 15px rgba(0, 0, 255, 0.8), 0 0 15px rgba(255, 0, 0, 0.8);
+        }
+        66% {
+          box-shadow: 0 0 15px rgba(0, 0, 255, 0.8),
+            0 0 15px rgba(255, 0, 0, 0.8), 0 0 15px rgba(0, 255, 0, 0.8);
+        }
+      }
+      .album-art-container {
+        width: 64px;
+        height: 64px;
+        margin-right: 15px;
+        border-radius: 50%;
+        overflow: hidden;
+      }
+      .album-art-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        animation: spin 3s linear infinite;
+      }
+      .album-art-container.new-track {
+        animation: removeDisk 1s forwards, addDisk 1s 1s forwards;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes removeDisk {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(0);
+          opacity: 0;
+        }
+      }
+      @keyframes addDisk {
+        0% {
+          transform: scale(0);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      .track-info {
+        flex-grow: 1;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .track-info p {
+        margin: 0;
+        white-space: nowrap;
+      }
+      .track-info .scroll {
+        animation: scroll 10s linear infinite;
+      }
+      @keyframes scroll {
+        0% {
+          transform: translateX(100%);
+        }
+        100% {
+          transform: translateX(-100%);
+        }
+      }
+      @keyframes fadeIn {
+        0% {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes fadeOut {
+        0% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+      }
+      .fade-in {
+        animation: fadeIn 0.5s forwards;
+      }
+      .fade-out {
+        animation: fadeOut 0.5s forwards;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="now-playing">
+      <div class="album-art-container">
+        <img id="album-art" src="" alt="Album Art" />
+      </div>
+      <div class="track-info">
+        <p id="track-name">Loading...</p>
+        <p id="artist-name">Loading...</p>
+      </div>
+    </div>
+
+    <script>
+      let currentTrackId = null;
+
+      async function refreshAccessToken() {
+        const response = await fetch("/refresh-token");
+        if (response.ok) {
+          const data = await response.json();
+          return data.access_token;
+        } else {
+          throw new Error("Failed to refresh access token");
+        }
+      }
+
+      async function fetchNowPlaying() {
+        try {
+          const response = await fetch("/spotify-now-playing");
+          if (response.status === 401) {
+            const newAccessToken = await refreshAccessToken();
+            const response = await fetch("/spotify-now-playing", {
+              headers: {
+                Authorization: `Bearer ${newAccessToken}`,
+              },
+            });
+            if (!response.ok) {
+              throw new Error(
+                "Failed to fetch now playing data after token refresh"
+              );
+            }
+          }
+          if (response.ok) {
+            const data = await response.json();
+            const track = data.item;
+
+            if (track.id !== currentTrackId) {
+              currentTrackId = track.id;
+
+              const albumArtElement = document.getElementById("album-art");
+              albumArtElement.classList.add("new-track");
+
+              setTimeout(() => {
+                albumArtElement.src = track.album.images[0].url;
+                albumArtElement.classList.remove("new-track");
+              }, 1000);
+
+              const trackNameElement = document.getElementById("track-name");
+              const artistNameElement = document.getElementById("artist-name");
+
+              // Fade-out existing text
+              trackNameElement.classList.add("fade-out");
+              artistNameElement.classList.add("fade-out");
+
+              setTimeout(() => {
+                // Update text
+                trackNameElement.innerText = track.name;
+                artistNameElement.innerText = track.artists
+                  .map((artist) => artist.name)
+                  .join(", ");
+
+                // Remove fade-out and add fade-in
+                trackNameElement.classList.remove("fade-out");
+                artistNameElement.classList.remove("fade-out");
+                trackNameElement.classList.add("fade-in");
+                artistNameElement.classList.add("fade-in");
+
+                if (
+                  trackNameElement.scrollWidth > trackNameElement.clientWidth
+                ) {
+                  trackNameElement.classList.add("scroll");
+                } else {
+                  trackNameElement.classList.remove("scroll");
+                }
+
+                // Remove fade-in after animation completes
+                setTimeout(() => {
+                  trackNameElement.classList.remove("fade-in");
+                  artistNameElement.classList.remove("fade-in");
+                }, 1000);
+              }, 500);
+            }
+          } else {
+            console.error(
+              "Error fetching now playing data:",
+              response.statusText
+            );
+          }
+        } catch (error) {
+          console.error("Error fetching now playing data:", error);
+        }
+      }
+
+      fetchNowPlaying();
+      setInterval(fetchNowPlaying, 1000); // Refresh every 1 second
+    </script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "twitchbot",
+  "version": "1.0.0",
+  "description": "Twitch.TV Bot, Node.JS, by Timmsy",
+  "scripts": {
+    "setup": "node setup.js",
+    "start": "pm2 start workspaceStart.config.js"
+  },
+  "keywords": [
+    "node",
+    "twitch",
+    "twitchtv",
+    "chatbot"
+  ],
+  "author": "Timmsy",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "inquirer": "^12.2.0",
+    "twitchbot": "file:"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

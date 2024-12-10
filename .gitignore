@@ -1,0 +1,76 @@
+# Root Directory
+
+# Ignore Node.js modules
+node_modules/
+
+# Ignore log files
+logs/*.log
+npm-debug.log
+
+# Ignore environment variable files
+.env
+
+# Ignore package-lock.json (if you prefer to regenerate it)
+package-lock.json
+
+# Ignore temporary files and directories
+tmp/
+temp/
+*.tmp
+
+# Ignore IDE and editor-specific directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Ignore operating system files
+.DS_Store
+Thumbs.db
+
+# Ignore miscellaneous files
+*.seed
+*.pid
+*.pid.lock
+*.code-workspace
+
+# chatBot Directory
+
+# Ignore Node.js modules
+chatBot/node_modules/
+
+# Ignore log files
+chatBot/logs/*.log
+
+# Ignore temporary files and directories
+chatBot/tmp/
+chatBot/temp/
+chatBot/*.tmp
+
+# Ignore IDE and editor-specific directories and files
+chatBot/.idea/
+chatBot/.vscode/
+
+# webServer Directory
+
+# Ignore Node.js modules
+webServer/node_modules/
+
+# Ignore log files
+webServer/logs/*.log
+
+# Ignore temporary files and directories
+webServer/tmp/
+webServer/temp/
+webServer/*.tmp
+
+# Ignore IDE and editor-specific directories and files
+webServer/.idea/
+webServer/.vscode/
+
+# dataStorage Directory
+
+# Ignore JSON data files
+dataStorage/*.json
