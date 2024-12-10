@@ -2,7 +2,8 @@ const fs = require("fs");
 const path = require("path");
 
 const logMessage = (logDir, logType, message) => {
-  const logDirPath = path.join(__dirname, logDir);
+  // Resolve the log directory correctly
+  const logDirPath = path.resolve(__dirname, logDir);
   if (!fs.existsSync(logDirPath)) {
     fs.mkdirSync(logDirPath, { recursive: true });
   }

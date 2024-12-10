@@ -1,8 +1,14 @@
 const path = require("path");
 
-// Function to resolve paths relative to the root directory
+/**
+ * Resolves a path relative to the root of the project.
+ * @param {string} relativePath - The path to resolve.
+ * @returns {string} The resolved path.
+ */
 const resolvePath = (relativePath) => {
   return path.resolve(__dirname, relativePath);
 };
 
-module.exports = { resolvePath };
+module.exports = {
+  resolvePath,
+};
