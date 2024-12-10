@@ -1,9 +1,13 @@
 const fs = require("fs");
-const path = require("path");
-const config = require("../../../../global.js"); // Adjusted to import global configurations
-const { logError, logInfo } = require("../../../../logger.js"); // Adjusted to import logger
-const { checkPermissions } = require("../../handlers/permissionHandler"); // Adjusted path for permission handler
-const { handleCooldowns } = require("../../handlers/cooldownHandler"); // Adjusted path for cooldown handler
+const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
+const config = require(resolvePath("global.js")); // Adjusted to import global configurations
+const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
+const { checkPermissions } = require(resolvePath(
+  "chatBot/modules/handlers/permissionHandler"
+)); // Adjusted path for permission handler
+const { handleCooldowns } = require(resolvePath(
+  "chatBot/modules/handlers/cooldownHandler"
+)); // Adjusted path for cooldown handler
 
 const COOLDOWN_TIME = 30000; // 30 seconds cooldown
 
@@ -43,7 +47,7 @@ module.exports = {
     const quoteNumber = parseInt(args[0], 10) - 1;
 
     fs.readFile(
-      path.join(__dirname, "../../../../dataStorage/quotes.json"), // Adjusted path for quotes file
+      resolvePath("dataStorage/quotes.json"), // Adjusted path for quotes file
       "utf8",
       (err, data) => {
         if (err) {
@@ -59,7 +63,7 @@ module.exports = {
         if (quoteNumber >= 0 && quoteNumber < quotes.length) {
           const removedQuote = quotes.splice(quoteNumber, 1);
           fs.writeFile(
-            path.join(__dirname, "../../../../dataStorage/quotes.json"), // Adjusted path for quotes file
+            resolvePath("dataStorage/quotes.json"), // Adjusted path for quotes file
             JSON.stringify({ quotes }, null, 2),
             (err) => {
               if (err) {

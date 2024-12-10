@@ -1,7 +1,9 @@
 const fs = require("fs");
-const path = require("path");
-const { logError, logInfo } = require("../../../../logger.js"); // Adjusted to import logger
-const { checkPermissions } = require("../../handlers/permissionHandler"); // Adjusted path for permission handler
+const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
+const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
+const { checkPermissions } = require(resolvePath(
+  "chatBot/modules/handlers/permissionHandler"
+)); // Adjusted path for permission handler
 
 module.exports = {
   name: "quote",
@@ -32,7 +34,7 @@ module.exports = {
     const quoteNumber = args.length ? parseInt(args[0], 10) - 1 : null;
 
     fs.readFile(
-      path.join(__dirname, "../../../../dataStorage/quotes.json"), // Adjusted path for quotes file
+      resolvePath("dataStorage/quotes.json"), // Adjusted path for quotes file
       "utf8",
       (err, data) => {
         if (err) {

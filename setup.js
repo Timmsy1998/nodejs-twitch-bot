@@ -1,14 +1,14 @@
 const fs = require("fs");
-const path = require("path");
 const { exec } = require("child_process");
 const inquirer = require("inquirer");
 const axios = require("axios");
 const express = require("express");
 const bodyParser = require("body-parser");
 const qs = require("qs");
+const { resolvePath } = require("./pathHelper");
 
 // Directory for dataStorage
-const dataStorageDir = path.join(__dirname, "dataStorage");
+const dataStorageDir = resolvePath("dataStorage");
 
 // Files to be created in dataStorage with initial content
 const filesToCreate = {
@@ -43,23 +43,17 @@ Object.entries(filesToCreate).forEach(([file, content]) => {
 const runNpmInstall = async (dir) => {
   return new Promise((resolve, reject) => {
     console.log(`Running npm install in ${dir}...`);
-    exec(
-      "npm install",
-      { cwd: path.join(__dirname, dir) },
-      (error, stdout, stderr) => {
-        if (error) {
-          console.error(
-            `Error running npm install in ${dir}: ${error.message}`
-          );
-          return reject(error);
-        }
-        if (stderr) {
-          console.error(`npm install stderr in ${dir}: ${stderr}`);
-        }
-        console.log(`npm install stdout in ${dir}: ${stdout}`);
-        resolve();
+    exec("npm install", { cwd: resolvePath(dir) }, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error running npm install in ${dir}: ${error.message}`);
+        return reject(error);
       }
-    );
+      if (stderr) {
+        console.error(`npm install stderr in ${dir}: ${stderr}`);
+      }
+      console.log(`npm install stdout in ${dir}: ${stdout}`);
+      resolve();
+    });
   });
 };
 
@@ -299,7 +293,7 @@ SPOTIFY_REFRESH_TOKEN=${spotifyTokens.SPOTIFY_REFRESH_TOKEN}
   `;
 
   // Write the .env file with collected environment variables
-  fs.writeFileSync(path.join(__dirname, ".env"), envContent.trim(), "utf8");
+  fs.writeFileSync(resolvePath(".env"), envContent.trim(), "utf8");
   console.log(".env file has been created successfully!");
 
   // Fetch Broadcaster ID using the provided token
@@ -317,7 +311,7 @@ SPOTIFY_REFRESH_TOKEN=${spotifyTokens.SPOTIFY_REFRESH_TOKEN}
     // Update the .env file with the Broadcaster ID
     const updatedEnvContent =
       envContent.trim() + `\nBROADCASTER_ID=${broadcasterId}`;
-    fs.writeFileSync(path.join(__dirname, ".env"), updatedEnvContent, "utf8");
+    fs.writeFileSync(resolvePath(".env"), updatedEnvContent, "utf8");
     console.log("Broadcaster ID has been added to the .env file successfully!");
   } catch (error) {
     console.error(`Error fetching Broadcaster ID: ${error.message}`);

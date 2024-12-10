@@ -1,5 +1,5 @@
-// Importing required logging functions
-const { logInfo, logError } = require("../../../logger.js");
+const { resolvePath } = require("../../../pathHelper"); // Importing resolvePath from pathHelper.js
+const { logInfo, logError } = require(resolvePath("logger.js")); // Adjusted path for logger
 
 /**
  * Handles command aliases.
@@ -21,7 +21,7 @@ const handleAliases = (client, commandName) => {
     // Check if the commandName is an alias and resolve it to the actual command
     const resolvedCommandName = aliasMap[commandName] || commandName;
     logInfo(
-      "chatBot/logs",
+      resolvePath("chatBot/logs"),
       `Resolved command alias: ${commandName} -> ${resolvedCommandName}`
     );
 
@@ -29,12 +29,15 @@ const handleAliases = (client, commandName) => {
     if (client.commands.has(resolvedCommandName)) {
       return client.commands.get(resolvedCommandName);
     } else {
-      logInfo("chatBot/logs", `No command found for alias: ${commandName}`);
+      logInfo(
+        resolvePath("chatBot/logs"),
+        `No command found for alias: ${commandName}`
+      );
       return null;
     }
   } catch (error) {
     logError(
-      "chatBot/logs",
+      resolvePath("chatBot/logs"),
       `Error handling alias for command ${commandName}: ${error.message} ❌`
     );
     return null;

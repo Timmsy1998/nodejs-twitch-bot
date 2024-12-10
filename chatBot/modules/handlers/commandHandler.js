@@ -1,5 +1,5 @@
-// Importing required logging functions
-const { logInfo, logError } = require("../../../logger.js");
+const { resolvePath } = require("../../../pathHelper"); // Importing resolvePath from pathHelper.js
+const { logInfo, logError } = require(resolvePath("logger.js")); // Adjusted path for logger
 
 /**
  * Handles command execution.
@@ -19,11 +19,11 @@ const handleCommand = (client, channel, tags, message) => {
     const commandName = args.shift().toLowerCase();
 
     logInfo(
-      "chatBot/logs",
+      resolvePath("chatBot/logs"),
       `Received message: ${message} from ${tags.username} 💬`
     );
     logInfo(
-      "chatBot/logs",
+      resolvePath("chatBot/logs"),
       `Processing command: ${commandName} with arguments: ${args.join(" ")} 🔄`
     );
 
@@ -31,23 +31,29 @@ const handleCommand = (client, channel, tags, message) => {
     let command = client.commands.get(commandName);
 
     if (command) {
-      logInfo("chatBot/logs", `Executing command: ${command.name} 🛠️`);
+      logInfo(
+        resolvePath("chatBot/logs"),
+        `Executing command: ${command.name} 🛠️`
+      );
       // Execute the command and handle any errors
       command.execute(client, channel, tags, args.join(" ")).catch((error) => {
         logError(
-          "chatBot/logs",
+          resolvePath("chatBot/logs"),
           `Error executing command ${command.name}: ${error.message} ❌`
         );
       });
     } else {
       logInfo(
-        "chatBot/logs",
+        resolvePath("chatBot/logs"),
         `No direct command found for: ${commandName}. 🔍`
       );
       // If no command is found, log a message
     }
   } catch (error) {
-    logError("chatBot/logs", `Error processing command: ${error.message} ❌`);
+    logError(
+      resolvePath("chatBot/logs"),
+      `Error processing command: ${error.message} ❌`
+    );
   }
 };
 

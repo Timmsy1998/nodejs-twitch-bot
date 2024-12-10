@@ -1,8 +1,8 @@
 const axios = require("axios");
 const fs = require("fs");
-const path = require("path");
-const config = require("../../../../global.js"); // Adjusted to import global configurations
-const { logError, logInfo } = require("../../../../logger.js"); // Adjusted to import logger
+const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
+const config = require(resolvePath("global.js")); // Adjusted to import global configurations
+const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
 
 /**
  * Refreshes the Spotify access token using the refresh token.
@@ -43,7 +43,7 @@ const refreshSpotifyToken = async () => {
     // Updating the config file with the new access token
     config.spotifyToken = newAccessToken;
     fs.writeFileSync(
-      path.join(__dirname, "../../../../global.js"),
+      resolvePath("global.js"),
       `module.exports = ${JSON.stringify(config, null, 2)};`
     );
 

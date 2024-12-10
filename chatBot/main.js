@@ -4,11 +4,16 @@ const path = require("path");
 const axios = require("axios");
 const config = require("../global.js"); // Importing configurations from global.js
 const { logError, logInfo, logConsole } = require("../logger.js"); // Importing logger
+const { resolvePath } = require("../pathHelper"); // Importing resolvePath from pathHelper.js
 
-const onConnectedHandler = require("./modules/events/connected");
-const createMessageHandler = require("./modules/events/message");
+const onConnectedHandler = require(resolvePath(
+  "chatBot/modules/events/connected"
+));
+const createMessageHandler = require(resolvePath(
+  "chatBot/modules/events/message"
+));
 
-const logDir = "chatBot/logs"; // Directory for chatBot logs
+const logDir = resolvePath("chatBot/logs"); // Directory for chatBot logs
 logConsole(logDir, "Bot is starting... 🚀");
 
 const client = new tmi.Client({
@@ -21,7 +26,7 @@ const client = new tmi.Client({
 client.commands = new Map();
 
 const loadCommands = (dir) => {
-  const fullPath = path.join(__dirname, dir);
+  const fullPath = resolvePath(path.join("chatBot", dir));
   if (!fs.existsSync(fullPath)) {
     logError(logDir, `Directory not found: ${fullPath}`);
     return;
@@ -31,7 +36,7 @@ const loadCommands = (dir) => {
     const filePath = path.join(fullPath, file);
     const stat = fs.lstatSync(filePath);
     if (stat.isDirectory()) {
-      loadCommands(filePath);
+      loadCommands(path.join(dir, file));
     } else if (file.endsWith(".js")) {
       try {
         logInfo(logDir, `Attempting to load command: ${filePath} 🚀`);

@@ -1,5 +1,5 @@
-// Importing required logging functions
-const { logInfo, logError } = require("../../../logger.js");
+const { resolvePath } = require("../../../pathHelper"); // Importing resolvePath from pathHelper.js
+const { logInfo, logError } = require(resolvePath("logger.js")); // Adjusted path for logger
 
 // Creating a Map to store user command timestamps
 const cooldowns = new Map();
@@ -37,7 +37,7 @@ const handleCooldowns = (client, channel, commandName, user, cooldownTime) => {
           `@${user}, please wait ${timeLeft} more seconds before using the ${commandName} command again. 🕒`
         );
         logInfo(
-          "chatBot/logs",
+          resolvePath("chatBot/logs"),
           `User ${user} tried to use ${commandName} command while on cooldown. Time left: ${timeLeft} seconds`
         );
         return true; // Command is on cooldown
@@ -47,13 +47,13 @@ const handleCooldowns = (client, channel, commandName, user, cooldownTime) => {
     // Set the user's timestamp to the current time
     timestamps.set(user, now);
     logInfo(
-      "chatBot/logs",
+      resolvePath("chatBot/logs"),
       `User ${user} used ${commandName} command. Cooldown started.`
     );
     return false; // Command is not on cooldown
   } catch (error) {
     logError(
-      "chatBot/logs",
+      resolvePath("chatBot/logs"),
       `Error handling cooldown for ${commandName} command by ${user}: ${error.message} ❌`
     );
     return false; // Fail-safe: allow command execution if an error occurs

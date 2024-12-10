@@ -1,6 +1,13 @@
-const { logError, logInfo } = require("../../../../logger.js"); // Adjusted to import logger
-const { checkPermissions } = require("../../handlers/permissionHandler"); // Adjusted path for permission handler
-const { handleCooldowns } = require("../../handlers/cooldownHandler"); // Adjusted path for cooldown handler
+const axios = require("axios");
+const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
+const config = require(resolvePath("global.js")); // Adjusted to import global configurations
+const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
+const { checkPermissions } = require(resolvePath(
+  "chatBot/modules/handlers/permissionHandler"
+)); // Adjusted path for permission handler
+const { handleCooldowns } = require(resolvePath(
+  "chatBot/modules/handlers/cooldownHandler"
+)); // Adjusted path for cooldown handler
 
 const COOLDOWN_TIME = 5000; // 5 seconds cooldown
 

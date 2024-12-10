@@ -1,6 +1,7 @@
 const axios = require("axios");
-const config = require("../../../global.js"); // Adjusted to import global configurations
-const { logError, logInfo } = require("../../../logger.js"); // Adjusted to import logger
+const { resolvePath } = require("../../../pathHelper"); // Importing resolvePath from pathHelper.js
+const config = require(resolvePath("global.js")); // Importing global configurations
+const { logError, logInfo } = require(resolvePath("logger.js")); // Importing logger
 
 // Mapping for short and long regions used in Riot API
 const regionMap = {

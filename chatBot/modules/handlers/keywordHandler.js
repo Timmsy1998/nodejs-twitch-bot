@@ -1,5 +1,5 @@
-// Importing required logging functions
-const { logInfo, logError } = require("../../../logger.js");
+const { resolvePath } = require("../../../pathHelper"); // Importing resolvePath from pathHelper.js
+const { logInfo, logError } = require(resolvePath("logger.js")); // Adjusted path for logger
 
 /**
  * Handles keyword detection and triggers commands.
@@ -24,22 +24,28 @@ const handleKeywords = (client, channel, tags, message) => {
     for (const [keyword, commandName] of Object.entries(keywordMap)) {
       if (message.toLowerCase().includes(keyword.toLowerCase())) {
         logInfo(
-          "chatBot/logs",
+          resolvePath("chatBot/logs"),
           `Keyword detected: ${keyword} in message: ${message}`
         );
         if (client.commands.has(commandName)) {
           return client.commands.get(commandName);
         } else {
-          logInfo("chatBot/logs", `No command found for keyword: ${keyword}`);
+          logInfo(
+            resolvePath("chatBot/logs"),
+            `No command found for keyword: ${keyword}`
+          );
         }
       }
     }
 
-    logInfo("chatBot/logs", `No keywords found in message: ${message}`);
+    logInfo(
+      resolvePath("chatBot/logs"),
+      `No keywords found in message: ${message}`
+    );
     return null;
   } catch (error) {
     logError(
-      "chatBot/logs",
+      resolvePath("chatBot/logs"),
       `Error handling keywords in message ${message}: ${error.message} ❌`
     );
     return null;

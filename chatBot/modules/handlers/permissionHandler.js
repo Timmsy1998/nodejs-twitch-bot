@@ -1,5 +1,5 @@
-// Importing required logging functions
-const { logInfo, logError } = require("../../../logger.js");
+const { resolvePath } = require("../../../pathHelper"); // Importing resolvePath from pathHelper.js
+const { logInfo, logError } = require(resolvePath("logger.js")); // Adjusted path for logger
 
 /**
  * Checks if a user has the required permissions to execute a command.
@@ -18,20 +18,20 @@ const checkPermissions = (tags, requiredPermission) => {
 
     if (userPermissions[requiredPermission.toLowerCase()]) {
       logInfo(
-        "chatBot/logs",
+        resolvePath("chatBot/logs"),
         `User ${tags.username} has the required ${requiredPermission} permissions.`
       );
       return true;
     } else {
       logInfo(
-        "chatBot/logs",
+        resolvePath("chatBot/logs"),
         `User ${tags.username} does not have the required ${requiredPermission} permissions.`
       );
       return false;
     }
   } catch (error) {
     logError(
-      "chatBot/logs",
+      resolvePath("chatBot/logs"),
       `Error checking permissions for ${tags.username}: ${error.message} ❌`
     );
     return false; // Fail-safe: deny access if an error occurs

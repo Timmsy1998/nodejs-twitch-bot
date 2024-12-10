@@ -1,8 +1,10 @@
 const fs = require("fs");
-const path = require("path");
-const config = require("../../../../global.js"); // Adjusted to import global configurations
-const { logError, logInfo } = require("../../../../logger.js"); // Adjusted to import logger
-const { checkPermissions } = require("../../handlers/permissionHandler"); // Adjusted path for permission handler
+const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
+const config = require(resolvePath("global.js")); // Adjusted to import global configurations
+const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
+const { checkPermissions } = require(resolvePath(
+  "chatBot/modules/handlers/permissionHandler"
+)); // Adjusted path for permission handler
 
 module.exports = {
   name: "clearquotes",
@@ -33,7 +35,7 @@ module.exports = {
     }
 
     fs.writeFile(
-      path.join(__dirname, "../../../../dataStorage/quotes.json"), // Adjusted path for quotes file
+      resolvePath("dataStorage/quotes.json"), // Adjusted path for quotes file
       JSON.stringify({ quotes: [] }, null, 2),
       (err) => {
         if (err) {

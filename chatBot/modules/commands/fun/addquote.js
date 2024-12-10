@@ -1,9 +1,13 @@
 const fs = require("fs");
-const path = require("path");
-const config = require("../../../../global.js"); // Adjusted to import global configurations
-const { logError, logInfo } = require("../../../../logger.js"); // Adjusted to import logger
-const { checkPermissions } = require("../../handlers/permissionHandler"); // Adjusted path for permission handler
-const { getCurrentGame } = require("../../api/twitchAPIwrapper"); // Adjusted path for Twitch API
+const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
+const config = require(resolvePath("global.js")); // Adjusted to import global configurations
+const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
+const { checkPermissions } = require(resolvePath(
+  "chatBot/modules/handlers/permissionHandler"
+)); // Adjusted path for permission handler
+const { getCurrentGame } = require(resolvePath(
+  "chatBot/modules/api/twitchAPIwrapper"
+)); // Adjusted path for Twitch API
 
 module.exports = {
   name: "addquote",
@@ -57,10 +61,7 @@ module.exports = {
       }
 
       const quoteEntry = `"${quote}" - 'Timmsy' | (${game}) (${date})`;
-      const filePath = path.join(
-        __dirname,
-        "../../../../dataStorage/quotes.json"
-      );
+      const filePath = resolvePath("dataStorage/quotes.json"); // Adjusted path for quotes file
 
       logInfo(`Attempting to add quote: ${quoteEntry}`);
 
