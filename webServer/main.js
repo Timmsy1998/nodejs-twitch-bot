@@ -1,10 +1,10 @@
 const express = require("express");
-const path = require("path");
-const setupSpotifyRoutes = require("./routes/spotify");
-const setupTwitchRoutes = require("./routes/twitch");
-const setupLeagueRoutes = require("./routes/league");
-const { logError, logInfo, logConsole } = require("../logger.js"); // Shared logger from the root
-const config = require("../global.js"); // Shared globals from the root
+const { resolvePath } = require("../../pathHelper"); // Importing resolvePath from pathHelper.js
+const setupSpotifyRoutes = require(resolvePath("webServer/routes/spotify")); // Setup Spotify-related routes
+const setupTwitchRoutes = require(resolvePath("webServer/routes/twitch")); // Setup Twitch-related routes
+const setupLeagueRoutes = require(resolvePath("webServer/routes/league")); // Setup League of Legends-related routes
+const { logError, logInfo, logConsole } = require(resolvePath("logger.js")); // Shared logger from the root
+const config = require(resolvePath("global.js")); // Shared globals from the root
 
 const app = express();
 const port = config.webServerPort || 3000; // Define the port from global config or fallback to 3000
@@ -14,7 +14,7 @@ logConsole("webServer/logs", "Starting express server...");
 logInfo("webServer/logs", "Starting express server...");
 
 // Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, "../public")));
+app.use(express.static(resolvePath("webServer/public")));
 
 // Middleware to log all incoming requests
 app.use((req, res, next) => {

@@ -2,9 +2,9 @@ const {
   getAccountByRiotId,
   getSummonerByPuuid,
   getRankedStats,
-} = require("../../chatBot/modules/api/lolAPIwrapper"); // Corrected path for Riot API
-const { logError, logInfo } = require("../../logger.js"); // Shared logger from the root
-const lolAccounts = require("../../dataStorage/lolAccounts.json"); // Adjusted path for LoL accounts JSON
+} = require(resolvePath("chatBot/modules/api/lolAPIwrapper")); // Corrected path for Riot API
+const { logError, logInfo } = require(resolvePath("logger.js")); // Shared logger from the root
+const lolAccounts = require(resolvePath("dataStorage/lolAccounts.json")); // Adjusted path for LoL accounts JSON
 
 const setupLeagueRoutes = (app) => {
   // Route to fetch rank information
@@ -121,12 +121,10 @@ const setupLeagueRoutes = (app) => {
         "webServer/logs",
         `Error fetching League of Legends rank information: ${error.message}`
       );
-      res
-        .status(500)
-        .json({
-          error: "Error fetching rank information",
-          details: error.message,
-        });
+      res.status(500).json({
+        error: "Error fetching rank information",
+        details: error.message,
+      });
     }
   });
 };

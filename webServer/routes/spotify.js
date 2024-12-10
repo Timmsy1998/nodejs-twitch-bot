@@ -1,9 +1,9 @@
 const axios = require("axios");
 const fs = require("fs");
-const path = require("path");
+const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
 const querystring = require("querystring");
-const config = require("../../global.js"); // Import shared global configuration
-const { logError, logInfo } = require("../../logger.js"); // Import shared logger
+const config = require(resolvePath("global.js")); // Import shared global configuration
+const { logError, logInfo } = require(resolvePath("logger.js")); // Import shared logger
 
 const setupSpotifyRoutes = (app) => {
   // Route to generate Spotify authorization URL
@@ -78,7 +78,7 @@ const setupSpotifyRoutes = (app) => {
       config.spotifyToken = accessToken;
       config.spotifyRefreshToken = refreshToken;
       fs.writeFileSync(
-        path.join(__dirname, "../../global.js"),
+        resolvePath("global.js"),
         `module.exports = ${JSON.stringify(config, null, 2)};`
       );
 
@@ -266,7 +266,7 @@ async function refreshSpotifyToken() {
     // Update the config file with the new access token
     config.spotifyToken = newAccessToken;
     fs.writeFileSync(
-      path.join(__dirname, "../../global.js"),
+      resolvePath("global.js"),
       `module.exports = ${JSON.stringify(config, null, 2)};`
     );
 

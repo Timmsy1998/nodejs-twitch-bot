@@ -1,11 +1,11 @@
-const path = require("path");
-const { logError, logInfo } = require("../../logger.js"); // Shared logger from the root
+const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
+const { logError, logInfo } = require(resolvePath("logger.js")); // Shared logger from the root
 
 const setupTwitchRoutes = (app) => {
   // Twitch OAuth callback route
   app.get("/callback", (req, res) => {
     logInfo("Received OAuth callback request"); // Log the callback request
-    res.sendFile(path.join(__dirname, "../public/callback.html")); // Serve the callback.html from the public folder
+    res.sendFile(resolvePath("webServer/public/callback.html")); // Serve the callback.html from the public folder
   });
 
   // Token route for Twitch
