@@ -1,11 +1,11 @@
 const axios = require("axios");
 const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
-const config = require(resolvePath("global.js")); // Adjusted to import global configurations
+const config = require(resolvePath("global.js")); // Import global configurations
 const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
-const { checkPermissions } = require(resolvePath(
+const checkPermissions = require(resolvePath(
   "chatBot/modules/handlers/permissionHandler"
 )); // Adjusted path for permission handler
-const { handleCooldowns } = require(resolvePath(
+const handleCooldowns = require(resolvePath(
   "chatBot/modules/handlers/cooldownHandler"
 )); // Adjusted path for cooldown handler
 
@@ -26,11 +26,20 @@ module.exports = {
    * @param {string} args - The command arguments.
    */
   async execute(client, channel, tags, args) {
+    logInfo(
+      resolvePath("chatBot/logs"),
+      `Runad command called by ${tags.username}.`
+    );
+
     // Check if the user has the required permissions (Moderators have access)
     if (!checkPermissions(tags, "moderator")) {
       client.say(
         channel,
         `@${tags.username}, you don't have permission to use this command. 🚫`
+      );
+      logError(
+        resolvePath("chatBot/logs"),
+        `User ${tags.username} tried to use !runad without permission. ❌`
       );
       return;
     }
@@ -42,8 +51,8 @@ module.exports = {
       return; // Exit if the command is on cooldown
     }
 
-    const broadcasterId = config.broadcasterId;
-    const accessToken = config.broadcasterToken;
+    const broadcasterId = config.BROADCASTER_ID;
+    const accessToken = config.BROADCASTER_TOKEN;
 
     try {
       client.say(
@@ -59,16 +68,22 @@ module.exports = {
         },
         {
           headers: {
-            "Client-ID": config.clientId,
+            "Client-ID": config.CLIENT_ID,
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
         }
       );
 
-      logInfo(`Ad started: ${JSON.stringify(response.data)}`);
+      logInfo(
+        resolvePath("chatBot/logs"),
+        `Ad started: ${JSON.stringify(response.data)}`
+      );
     } catch (error) {
-      logError(`Error running ad: ${error.message} ❌`);
+      logError(
+        resolvePath("chatBot/logs"),
+        `Error running ad: ${error.message} ❌`
+      );
       client.say(
         channel,
         `@${tags.username}, there was an error running the ad. ❌`

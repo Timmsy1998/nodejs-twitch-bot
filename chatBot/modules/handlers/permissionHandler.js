@@ -1,5 +1,6 @@
 const { resolvePath } = require("../../../pathHelper"); // Importing resolvePath from pathHelper.js
 const { logInfo, logError } = require(resolvePath("logger.js")); // Adjusted path for logger
+const config = require(resolvePath("global.js")); // Import global configuration
 
 /**
  * Checks if a user has the required permissions to execute a command.

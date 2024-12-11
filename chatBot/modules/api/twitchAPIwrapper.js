@@ -13,14 +13,14 @@ const createTwitchApi = (accessToken) => {
   return axios.create({
     baseURL: "https://api.twitch.tv/helix",
     headers: {
-      "Client-ID": config.clientId,
+      "Client-ID": config.CLIENT_ID,
       Authorization: `Bearer ${accessToken}`,
     },
   });
 };
 
 // Create an Axios instance for the broadcaster
-const broadcasterTwitchApi = createTwitchApi(config.broadcasterToken);
+const broadcasterTwitchApi = createTwitchApi(config.BROADCASTER_TOKEN);
 
 /**
  * Fetches the game ID for a given game name.
@@ -59,7 +59,7 @@ const getGameId = async (gameName) => {
 const updateChannelInfo = async (data) => {
   try {
     const response = await broadcasterTwitchApi.patch(
-      `/channels?broadcaster_id=${config.broadcasterId}`,
+      `/channels?broadcaster_id=${config.BROADCASTER_ID}`,
       data
     );
     logInfo(`Updated channel info: ${JSON.stringify(response.data)}`);
@@ -82,7 +82,7 @@ const updateChannelInfo = async (data) => {
 const getCurrentGame = async () => {
   try {
     const response = await broadcasterTwitchApi.get(
-      `/channels?broadcaster_id=${config.broadcasterId}`
+      `/channels?broadcaster_id=${config.BROADCASTER_ID}`
     );
     if (response.data.data.length > 0) {
       logInfo(`Current game: ${response.data.data[0].game_name}`);

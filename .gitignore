@@ -3,6 +3,9 @@
 # Ignore Node.js modules
 node_modules/
 
+# Ignore Bespokse Configs
+config/*.js
+
 # Ignore log files
 logs/*.log
 npm-debug.log
@@ -73,4 +76,6 @@ webServer/.vscode/
 # dataStorage Directory
 
 # Ignore JSON data files
-dataStorage/*.json
+dataStorage/followage.json
+dataStorage/lolAccounts.json
+dataStorage/quotes.json

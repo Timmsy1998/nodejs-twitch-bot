@@ -12,28 +12,18 @@ const { logInfo, logError } = require(resolvePath("logger.js")); // Adjusted pat
  */
 const handleKeywords = (client, channel, tags, message) => {
   try {
-    // Example keyword map for demonstration purposes
-    const keywordMap = {
-      hello: "hello", // Keyword "hello" triggers "hello" command
-      help: "help", // Keyword "help" triggers "help" command
-      bot: "info", // Keyword "bot" triggers "info" command
-      // Add more keywords and associated commands as needed
-    };
+    const lowerCaseMessage = message.toLowerCase();
 
-    // Loop through keywords and check if any are present in the message
-    for (const [keyword, commandName] of Object.entries(keywordMap)) {
-      if (message.toLowerCase().includes(keyword.toLowerCase())) {
-        logInfo(
-          resolvePath("chatBot/logs"),
-          `Keyword detected: ${keyword} in message: ${message}`
-        );
-        if (client.commands.has(commandName)) {
-          return client.commands.get(commandName);
-        } else {
-          logInfo(
-            resolvePath("chatBot/logs"),
-            `No command found for keyword: ${keyword}`
-          );
+    for (const [commandName, command] of client.commands) {
+      if (command.keywords) {
+        for (const keyword of command.keywords) {
+          if (lowerCaseMessage.includes(keyword.toLowerCase())) {
+            logInfo(
+              resolvePath("chatBot/logs"),
+              `Keyword detected: ${keyword} in message: ${message}`
+            );
+            return command;
+          }
         }
       }
     }

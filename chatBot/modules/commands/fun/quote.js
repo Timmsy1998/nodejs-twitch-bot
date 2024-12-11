@@ -1,7 +1,7 @@
 const fs = require("fs");
 const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
 const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
-const { checkPermissions } = require(resolvePath(
+const checkPermissions = require(resolvePath(
   "chatBot/modules/handlers/permissionHandler"
 )); // Adjusted path for permission handler
 
@@ -20,13 +20,20 @@ module.exports = {
    * @param {string} args - The command arguments.
    */
   execute(client, channel, tags, args) {
-    logInfo(`Quote command called by ${tags.username}.`);
+    logInfo(
+      resolvePath("chatBot/logs"),
+      `Quote command called by ${tags.username}.`
+    );
 
     // Check if the user has the required permissions (Viewers have access by default)
     if (!checkPermissions(tags, "viewer")) {
       client.say(
         channel,
         `@${tags.username}, you do not have permission to use this command. 🚫`
+      );
+      logError(
+        resolvePath("chatBot/logs"),
+        `User ${tags.username} tried to use !quote without permission. ❌`
       );
       return;
     }
@@ -38,7 +45,10 @@ module.exports = {
       "utf8",
       (err, data) => {
         if (err) {
-          logError(`Error reading quotes file: ${err.message} ❌`);
+          logError(
+            resolvePath("chatBot/logs"),
+            `Error reading quotes file: ${err.message} ❌`
+          );
           client.say(
             channel,
             `@${tags.username}, there was an error retrieving the quote. ❌`
@@ -51,13 +61,17 @@ module.exports = {
           if (quoteNumber >= 0 && quoteNumber < quotes.length) {
             const quote = quotes[quoteNumber];
             client.say(channel, `Quote #${quoteNumber + 1}: ${quote}`);
-            logInfo(`Retrieved Quote #${quoteNumber + 1}: ${quote}`);
+            logInfo(
+              resolvePath("chatBot/logs"),
+              `Retrieved Quote #${quoteNumber + 1}: ${quote}`
+            );
           } else {
             client.say(
               channel,
               `@${tags.username}, that quote number doesn't exist. ❌`
             );
             logInfo(
+              resolvePath("chatBot/logs"),
               `Requested Quote #${quoteNumber + 1} by ${
                 tags.username
               } does not exist.`
@@ -70,7 +84,10 @@ module.exports = {
             channel,
             `Random Quote #${randomIndex + 1}: ${randomQuote}`
           );
-          logInfo(`Retrieved Random Quote #${randomIndex + 1}: ${randomQuote}`);
+          logInfo(
+            resolvePath("chatBot/logs"),
+            `Retrieved Random Quote #${randomIndex + 1}: ${randomQuote}`
+          );
         }
       }
     );

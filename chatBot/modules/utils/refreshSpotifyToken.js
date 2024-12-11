@@ -1,12 +1,31 @@
 const axios = require("axios");
 const fs = require("fs");
 const { resolvePath } = require("../../../pathHelper"); // Importing resolvePath from pathHelper.js
-const config = require(resolvePath("global.js")); // Adjusted to import global configurations
-const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
+const config = require(resolvePath("global.js")); // Importing global configurations
+const { logError, logInfo } = require(resolvePath("logger.js")); // Importing logger
+
+/**
+ * Function to update .env file
+ * @param {Object} newEnv - An object containing the new environment variables
+ */
+const updateEnv = (newEnv) => {
+  const envPath = resolvePath("../../../../.env"); // Adjust the path to your .env file
+  const envContent = fs.readFileSync(envPath, "utf-8");
+  const envLines = envContent.split("\n");
+
+  const updatedEnvLines = envLines.map((line) => {
+    const [key, value] = line.split("=");
+    if (newEnv[key]) {
+      return `${key}=${newEnv[key]}`;
+    }
+    return line;
+  });
+
+  fs.writeFileSync(envPath, updatedEnvLines.join("\n"), "utf-8");
+};
 
 /**
  * Refreshes the Spotify access token using the refresh token.
- *
  * @returns {string} - The new Spotify access token.
  * @throws {Error} - Throws an error if the refresh token is not available or the API request fails.
  */
@@ -38,14 +57,11 @@ const refreshSpotifyToken = async () => {
     );
 
     const newAccessToken = response.data.access_token;
-    global.spotifyAccessToken = newAccessToken;
 
-    // Updating the config file with the new access token
-    config.spotifyToken = newAccessToken;
-    fs.writeFileSync(
-      resolvePath("global.js"),
-      `module.exports = ${JSON.stringify(config, null, 2)};`
-    );
+    // Updating the .env file with the new access token
+    updateEnv({
+      SPOTIFY_TOKEN: newAccessToken,
+    });
 
     logInfo(`Spotify access token refreshed: ${newAccessToken} 🔄`);
     return newAccessToken;

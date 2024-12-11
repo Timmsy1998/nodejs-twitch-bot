@@ -13,7 +13,7 @@ module.exports = (addr, port) => {
 
     // Send a message to the chat when the bot comes online
     client.say(
-      config.broadcasterUsername,
+      config.BROADCASTER_USERNAME,
       "Hello chat! 🤖 The bot is now online and ready to assist you. 🚀✨"
     );
   } catch (error) {

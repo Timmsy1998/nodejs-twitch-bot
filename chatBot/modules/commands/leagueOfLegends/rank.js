@@ -1,12 +1,12 @@
 const axios = require("axios");
 const fs = require("fs");
 const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
-const config = require(resolvePath("global.js")); // Adjusted to import global configurations
+const config = require(resolvePath("global.js")); // Import global configurations
 const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
-const { checkPermissions } = require(resolvePath(
+const checkPermissions = require(resolvePath(
   "chatBot/modules/handlers/permissionHandler"
 )); // Adjusted path for permission handler
-const { handleCooldowns } = require(resolvePath(
+const handleCooldowns = require(resolvePath(
   "chatBot/modules/handlers/cooldownHandler"
 )); // Adjusted path for cooldown handler
 const {
@@ -54,7 +54,10 @@ module.exports = {
    * @param {string} args - The command arguments.
    */
   async execute(client, channel, tags, args) {
-    const commandName = "rank";
+    logInfo(
+      resolvePath("chatBot/logs"),
+      `Rank command called by ${tags.username}.`
+    );
 
     // Check if the user has the required permissions (Viewers have access by default)
     if (!checkPermissions(tags, "viewer")) {
@@ -80,6 +83,7 @@ module.exports = {
 
       for (const account of accountsData.accounts) {
         logInfo(
+          resolvePath("chatBot/logs"),
           `Fetching data for account: ${account.name}#${account.tag} (${account.region})`
         );
 
@@ -89,19 +93,28 @@ module.exports = {
             account.tag,
             account.region
           );
-          logInfo(`Account data: ${JSON.stringify(accountData)}`);
+          logInfo(
+            resolvePath("chatBot/logs"),
+            `Account data: ${JSON.stringify(accountData)}`
+          );
 
           const summonerData = await getSummonerByPuuid(
             accountData.puuid,
             account.region
           );
-          logInfo(`Summoner data: ${JSON.stringify(summonerData)}`);
+          logInfo(
+            resolvePath("chatBot/logs"),
+            `Summoner data: ${JSON.stringify(summonerData)}`
+          );
 
           const rankedStats = await getRankedStats(
             summonerData.id,
             account.region
           );
-          logInfo(`Ranked stats: ${JSON.stringify(rankedStats)}`);
+          logInfo(
+            resolvePath("chatBot/logs"),
+            `Ranked stats: ${JSON.stringify(rankedStats)}`
+          );
 
           if (rankedStats.length > 0) {
             const { tier, rank, leaguePoints } = rankedStats[0];
@@ -125,9 +138,11 @@ module.exports = {
           }
         } catch (error) {
           logError(
+            resolvePath("chatBot/logs"),
             `Error fetching data for account: ${account.name}#${account.tag} (${account.region})`
           );
           logError(
+            resolvePath("chatBot/logs"),
             `API Error: ${
               error.response
                 ? JSON.stringify(error.response.data)
@@ -150,6 +165,7 @@ module.exports = {
       }
     } catch (error) {
       logError(
+        resolvePath("chatBot/logs"),
         `Error fetching rank data: ${
           error.response ? JSON.stringify(error.response.data) : error.message
         }`

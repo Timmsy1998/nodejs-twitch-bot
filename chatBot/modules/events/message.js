@@ -10,13 +10,13 @@ const handleKeywords = require(resolvePath(
   "chatBot/modules/handlers/keywordHandler"
 )); // Importing keyword handler
 
-module.exports = (client) => (channel, tags, message, self) => {
+module.exports = (client) => async (channel, tags, message, self) => {
   if (self) return;
 
   try {
     // Welcome first-time chatters
     if (tags["first-msg"]) {
-      client.say(
+      await client.say(
         channel,
         `Welcome ${tags["display-name"]}! 🎉 Thanks for joining us!`
       );
@@ -46,12 +46,14 @@ module.exports = (client) => (channel, tags, message, self) => {
         resolvePath("chatBot/logs"),
         `Executing command: ${command.name} 🛠️`
       );
-      command.execute(client, channel, tags, args.join(" ")).catch((error) => {
-        logError(
-          resolvePath("chatBot/logs"),
-          `Error executing command ${command.name}: ${error.message} ❌`
-        );
-      });
+      await command
+        .execute(client, channel, tags, args.join(" "))
+        .catch((error) => {
+          logError(
+            resolvePath("chatBot/logs"),
+            `Error executing command ${command.name}: ${error.message} ❌`
+          );
+        });
     } else {
       logInfo(
         resolvePath("chatBot/logs"),

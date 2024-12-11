@@ -7,7 +7,7 @@ const { logError, logInfo, logConsole } = require(resolvePath("logger.js")); // 
 const config = require(resolvePath("global.js")); // Shared globals from the root
 
 const app = express();
-const port = config.webServerPort || 3000; // Define the port from global config or fallback to 3000
+const port = config.serverConfig.port || 3000; // Define the port from server config or fallback to 3000
 
 // Log the startup of the express server
 logConsole("webServer/logs", "Starting express server...");

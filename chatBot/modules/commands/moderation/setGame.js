@@ -1,14 +1,14 @@
 const axios = require("axios");
 const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
-const config = require(resolvePath("global.js")); // Adjusted to import global configurations
+const config = require(resolvePath("global.js")); // Import global configurations
 const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
 const { getGameId, updateChannelInfo } = require(resolvePath(
   "chatBot/modules/api/twitchAPIwrapper"
 )); // Adjusted path for Twitch API
-const { checkPermissions } = require(resolvePath(
+const checkPermissions = require(resolvePath(
   "chatBot/modules/handlers/permissionHandler"
 )); // Adjusted path for permission handler
-const { handleCooldowns } = require(resolvePath(
+const handleCooldowns = require(resolvePath(
   "chatBot/modules/handlers/cooldownHandler"
 )); // Adjusted path for cooldown handler
 
@@ -30,11 +30,20 @@ module.exports = {
    * @param {string} args - The command arguments.
    */
   async execute(client, channel, tags, args) {
+    logInfo(
+      resolvePath("chatBot/logs"),
+      `Setgame command called by ${tags.username}.`
+    );
+
     // Check if the user has the required permissions (Moderators have access)
     if (!checkPermissions(tags, "moderator")) {
       client.say(
         channel,
         `@${tags.username}, you don't have permission to use this command. 🚫`
+      );
+      logError(
+        resolvePath("chatBot/logs"),
+        `User ${tags.username} tried to use !setgame without permission. ❌`
       );
       return;
     }
@@ -55,7 +64,7 @@ module.exports = {
           channel,
           `@${tags.username}, the game "${game}" was not found. ❌`
         );
-        logError(`Game "${game}" was not found.`);
+        logError(resolvePath("chatBot/logs"), `Game "${game}" was not found.`);
         return;
       }
 
@@ -65,9 +74,15 @@ module.exports = {
         channel,
         `@${tags.username}, the game has been updated to: ${game} 🎮`
       );
-      logInfo(`Game updated to: ${game} by ${tags.username}`);
+      logInfo(
+        resolvePath("chatBot/logs"),
+        `Game updated to: ${game} by ${tags.username}`
+      );
     } catch (error) {
-      logError(`Error updating game: ${error.message} ❌`);
+      logError(
+        resolvePath("chatBot/logs"),
+        `Error updating game: ${error.message} ❌`
+      );
       client.say(
         channel,
         `@${tags.username}, there was an error updating the game. ❌`

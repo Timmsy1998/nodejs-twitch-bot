@@ -1,5 +1,8 @@
 const { resolvePath } = require("../../../pathHelper"); // Importing resolvePath from pathHelper.js
 const { logInfo, logError } = require(resolvePath("logger.js")); // Adjusted path for logger
+const handleAliases = require(resolvePath(
+  "chatBot/modules/handlers/aliasHandler"
+)); // Import alias handler
 
 /**
  * Handles command execution.
@@ -28,7 +31,8 @@ const handleCommand = (client, channel, tags, message) => {
     );
 
     // Attempt to find the command in the client's commands collection
-    let command = client.commands.get(commandName);
+    let command =
+      client.commands.get(commandName) || handleAliases(client, commandName);
 
     if (command) {
       logInfo(
@@ -45,9 +49,8 @@ const handleCommand = (client, channel, tags, message) => {
     } else {
       logInfo(
         resolvePath("chatBot/logs"),
-        `No direct command found for: ${commandName}. 🔍`
+        `No direct command or alias found for: ${commandName}. 🔍`
       );
-      // If no command is found, log a message
     }
   } catch (error) {
     logError(

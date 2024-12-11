@@ -3,10 +3,10 @@ const fs = require("fs");
 const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
 const config = require(resolvePath("global.js")); // Adjusted to import global configurations
 const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
-const { checkPermissions } = require(resolvePath(
+const checkPermissions = require(resolvePath(
   "chatBot/modules/handlers/permissionHandler"
 )); // Adjusted path for permission handler
-const { handleCooldowns } = require(resolvePath(
+const handleCooldowns = require(resolvePath(
   "chatBot/modules/handlers/cooldownHandler"
 )); // Adjusted path for cooldown handler
 const { getAccountByRiotId, getCurrentGameInfo } = require(resolvePath(
@@ -124,7 +124,10 @@ module.exports = {
    * @param {string} args - The command arguments.
    */
   async execute(client, channel, tags, args) {
-    const commandName = "runes";
+    logInfo(
+      resolvePath("chatBot/logs"),
+      `Runes command called by ${tags.username}.`
+    );
 
     // Check if the user has the required permissions (Viewers have access by default)
     if (!checkPermissions(tags, "viewer")) {
@@ -148,6 +151,7 @@ module.exports = {
       );
       for (const account of accountsData.accounts) {
         logInfo(
+          resolvePath("chatBot/logs"),
           `Checking if account is in a game: ${account.name} - ${account.tag} (${account.region})`
         );
 
@@ -157,13 +161,19 @@ module.exports = {
             account.tag,
             account.region
           );
-          logInfo(`Account data: ${JSON.stringify(accountData)}`);
+          logInfo(
+            resolvePath("chatBot/logs"),
+            `Account data: ${JSON.stringify(accountData)}`
+          );
 
           const gameInfo = await getCurrentGameInfo(
             accountData.puuid,
             account.region
           );
-          logInfo(`Game info: ${JSON.stringify(gameInfo)}`);
+          logInfo(
+            resolvePath("chatBot/logs"),
+            `Game info: ${JSON.stringify(gameInfo)}`
+          );
 
           if (gameInfo && gameInfo.gameId) {
             const participant = gameInfo.participants.find(
@@ -172,7 +182,10 @@ module.exports = {
 
             if (participant) {
               const runes = participant.perks;
-              logInfo(`Current runes: ${JSON.stringify(runes)}`);
+              logInfo(
+                resolvePath("chatBot/logs"),
+                `Current runes: ${JSON.stringify(runes)}`
+              );
 
               const formattedRunes = formatRunes(runes);
               client.say(
@@ -184,9 +197,11 @@ module.exports = {
           }
         } catch (error) {
           logError(
+            resolvePath("chatBot/logs"),
             `Error checking account: ${account.name} - ${account.tag} (${account.region})`
           );
           logError(
+            resolvePath("chatBot/logs"),
             `API Error: ${
               error.response
                 ? JSON.stringify(error.response.data)
@@ -202,6 +217,7 @@ module.exports = {
       );
     } catch (error) {
       logError(
+        resolvePath("chatBot/logs"),
         `Error checking accounts: ${
           error.response ? JSON.stringify(error.response.data) : error.message
         }`

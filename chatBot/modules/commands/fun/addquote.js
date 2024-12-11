@@ -2,7 +2,7 @@ const fs = require("fs");
 const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
 const config = require(resolvePath("global.js")); // Adjusted to import global configurations
 const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
-const { checkPermissions } = require(resolvePath(
+const checkPermissions = require(resolvePath(
   "chatBot/modules/handlers/permissionHandler"
 )); // Adjusted path for permission handler
 const { getCurrentGame } = require(resolvePath(
@@ -23,7 +23,10 @@ module.exports = {
    * @param {string} args - The command arguments.
    */
   async execute(client, channel, tags, args) {
-    logInfo(`Addquote command called by ${tags.username}.`);
+    logInfo(
+      resolvePath("chatBot/logs"),
+      `Addquote command called by ${tags.username}.`
+    );
 
     // Check if the user has the required permissions (Viewers have access by default)
     if (!checkPermissions(tags, "viewer")) {
@@ -31,12 +34,19 @@ module.exports = {
         channel,
         `@${tags.username}, you don't have permission to use this command. 🚫`
       );
+      logError(
+        resolvePath("chatBot/logs"),
+        `User ${tags.username} tried to use !addquote without permission. ❌`
+      );
       return;
     }
 
     try {
       if (!args || typeof args !== "string") {
-        logError("Invalid args: expected a string. ❌");
+        logError(
+          resolvePath("chatBot/logs"),
+          "Invalid args: expected a string. ❌"
+        );
         client.say(
           channel,
           `@${tags.username}, there was an error with the quote format. ❌`
@@ -63,11 +73,17 @@ module.exports = {
       const quoteEntry = `"${quote}" - 'Timmsy' | (${game}) (${date})`;
       const filePath = resolvePath("dataStorage/quotes.json"); // Adjusted path for quotes file
 
-      logInfo(`Attempting to add quote: ${quoteEntry}`);
+      logInfo(
+        resolvePath("chatBot/logs"),
+        `Attempting to add quote: ${quoteEntry}`
+      );
 
       fs.readFile(filePath, "utf8", (err, data) => {
         if (err) {
-          logError(`Error reading quotes file: ${err.message} ❌`);
+          logError(
+            resolvePath("chatBot/logs"),
+            `Error reading quotes file: ${err.message} ❌`
+          );
           client.say(
             channel,
             `@${tags.username}, there was an error reading the quotes file. ❌`
@@ -79,7 +95,10 @@ module.exports = {
         try {
           quotes = JSON.parse(data);
         } catch (parseError) {
-          logError(`Error parsing quotes file: ${parseError.message} ❌`);
+          logError(
+            resolvePath("chatBot/logs"),
+            `Error parsing quotes file: ${parseError.message} ❌`
+          );
           client.say(
             channel,
             `@${tags.username}, there was an error parsing the quotes file. ❌`
@@ -92,7 +111,10 @@ module.exports = {
 
         fs.writeFile(filePath, JSON.stringify(quotes, null, 2), (writeErr) => {
           if (writeErr) {
-            logError(`Error writing to quotes file: ${writeErr.message} ❌`);
+            logError(
+              resolvePath("chatBot/logs"),
+              `Error writing to quotes file: ${writeErr.message} ❌`
+            );
             client.say(
               channel,
               `@${tags.username}, there was an error adding the quote. ❌`
@@ -101,12 +123,16 @@ module.exports = {
           }
           client.say(channel, `Quote #${quoteNumber} added: ${quoteEntry}`);
           logInfo(
+            resolvePath("chatBot/logs"),
             `Quote #${quoteNumber} added by ${tags.username}: ${quoteEntry}`
           );
         });
       });
     } catch (error) {
-      logError(`Unexpected error: ${error.message} ❌`);
+      logError(
+        resolvePath("chatBot/logs"),
+        `Unexpected error: ${error.message} ❌`
+      );
       client.say(
         channel,
         `@${tags.username}, there was an unexpected error adding the quote. ❌`

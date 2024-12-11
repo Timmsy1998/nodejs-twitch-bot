@@ -5,6 +5,7 @@ const {
   getRankedStats,
 } = require(resolvePath("chatBot/modules/api/lolAPIwrapper")); // Corrected path for Riot API
 const { logError, logInfo } = require(resolvePath("logger.js")); // Shared logger from the root
+const config = require(resolvePath("global.js")); // Import shared global configuration
 const lolAccounts = require(resolvePath("dataStorage/lolAccounts.json")); // Adjusted path for LoL accounts JSON
 
 const setupLeagueRoutes = (app) => {

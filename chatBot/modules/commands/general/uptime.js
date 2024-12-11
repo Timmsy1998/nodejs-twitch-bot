@@ -1,8 +1,8 @@
 const axios = require("axios");
 const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
-const config = require(resolvePath("global.js")); // Adjusted to import global configurations
+const config = require(resolvePath("global.js")); // Import global configurations
 const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
-const { checkPermissions } = require(resolvePath(
+const checkPermissions = require(resolvePath(
   "chatBot/modules/handlers/permissionHandler"
 )); // Adjusted path for permission handler
 
@@ -24,11 +24,20 @@ module.exports = {
    * @param {string} args - The command arguments.
    */
   async execute(client, channel, tags, args) {
+    logInfo(
+      resolvePath("chatBot/logs"),
+      `Uptime command called by ${tags.username}.`
+    );
+
     // Check if the user has the required permissions (Viewers have access by default)
     if (!checkPermissions(tags, "viewer")) {
       client.say(
         channel,
         `@${tags.username}, you don't have permission to use this command. 🚫`
+      );
+      logError(
+        resolvePath("chatBot/logs"),
+        `User ${tags.username} tried to use !uptime without permission. ❌`
       );
       return;
     }
@@ -36,11 +45,11 @@ module.exports = {
     try {
       // Fetch the stream information from the Twitch API
       const response = await axios.get(
-        `https://api.twitch.tv/helix/streams?user_id=${config.broadcasterId}`,
+        `https://api.twitch.tv/helix/streams?user_id=${config.BROADCASTER_ID}`,
         {
           headers: {
-            "Client-ID": config.clientId,
-            Authorization: `Bearer ${config.broadcasterToken}`,
+            "Client-ID": config.CLIENT_ID,
+            Authorization: `Bearer ${config.BROADCASTER_TOKEN}`,
           },
         }
       );
@@ -52,18 +61,21 @@ module.exports = {
         const uptime = Math.floor((now - startedAt) / (1000 * 60)); // Uptime in minutes
         client.say(channel, `The stream has been live for ${uptime} minutes.`);
         logInfo(
+          resolvePath("chatBot/logs"),
           `Uptime command executed by ${tags.username}: ${uptime} minutes`
         );
       } else {
         client.say(channel, "The stream is not live currently. 🚫");
         logInfo(
+          resolvePath("chatBot/logs"),
           `Uptime command executed by ${tags.username}: Stream is not live`
         );
       }
     } catch (error) {
       logError(
+        resolvePath("chatBot/logs"),
         `Error fetching stream uptime: ${
-          error.response ? error.response.data : error.message
+          error.response ? JSON.stringify(error.response.data) : error.message
         } ❌`
       );
       client.say(

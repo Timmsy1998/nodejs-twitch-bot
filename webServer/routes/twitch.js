@@ -1,5 +1,6 @@
 const { resolvePath } = require("../../pathHelper"); // Importing resolvePath from pathHelper.js
 const { logError, logInfo } = require(resolvePath("logger.js")); // Shared logger from the root
+const config = require(resolvePath("global.js")); // Import shared global configuration
 
 const setupTwitchRoutes = (app) => {
   // Twitch OAuth callback route
@@ -13,7 +14,7 @@ const setupTwitchRoutes = (app) => {
     const accessToken = req.query.access_token;
     res.send("Access token received. You can close this window now.");
     logInfo(`Twitch access token received: ${accessToken}`); // Log the received access token
-    global.twitchAccessToken = accessToken;
+    config.twitchConfig.BOT_TOKEN = accessToken; // Update the token in the global configuration
   });
 };
 

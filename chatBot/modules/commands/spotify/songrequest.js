@@ -1,16 +1,16 @@
 const axios = require("axios");
 const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
-const config = require(resolvePath("global.js")); // Adjusted to import global configurations
-const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
+const config = require(resolvePath("global.js")); // Import global configurations
+const { logError, logInfo } = require(resolvePath("logger.js")); // Import logger
 const refreshSpotifyToken = require(resolvePath(
   "chatBot/modules/utils/refreshSpotifyToken"
-)); // Adjusted path for Spotify token refresh utility
-const { checkPermissions } = require(resolvePath(
+)); // Import Spotify token refresh utility
+const checkPermissions = require(resolvePath(
   "chatBot/modules/handlers/permissionHandler"
-)); // Adjusted path for permission handler
-const { handleCooldowns } = require(resolvePath(
+)); // Import permission handler
+const handleCooldowns = require(resolvePath(
   "chatBot/modules/handlers/cooldownHandler"
-)); // Adjusted path for cooldown handler
+)); // Import cooldown handler
 
 const requestedSongsCache = new Map();
 const CACHE_EXPIRY_TIME = 300000; // 5 minutes
@@ -31,13 +31,16 @@ const songRequest = async (accessToken, query, cacheKey, channel, client) => {
     limit: 1,
   };
 
-  logInfo("Sending search request to Spotify.");
+  logInfo(resolvePath("chatBot/logs"), "Sending search request to Spotify.");
   const searchResponse = await axios.get("https://api.spotify.com/v1/search", {
     headers: { Authorization: `Bearer ${accessToken}` },
     params: searchParams,
   });
 
-  logInfo(`Spotify search response: ${JSON.stringify(searchResponse.data)}`);
+  logInfo(
+    resolvePath("chatBot/logs"),
+    `Spotify search response: ${JSON.stringify(searchResponse.data)}`
+  );
 
   if (searchResponse.data.tracks.items.length > 0) {
     const track = searchResponse.data.tracks.items[0];
@@ -80,7 +83,7 @@ const addToQueue = async (
   client
 ) => {
   try {
-    logInfo("Fetching current queue.");
+    logInfo(resolvePath("chatBot/logs"), "Fetching current queue.");
     const queueResponse = await axios.get(
       "https://api.spotify.com/v1/me/player/queue",
       {
@@ -88,7 +91,10 @@ const addToQueue = async (
       }
     );
 
-    logInfo(`Queue response status: ${queueResponse.status}`);
+    logInfo(
+      resolvePath("chatBot/logs"),
+      `Queue response status: ${queueResponse.status}`
+    );
     const tracksInQueue = queueResponse.data.queue.map((t) => t.uri);
 
     if (tracksInQueue.includes(trackUri)) {
@@ -97,7 +103,10 @@ const addToQueue = async (
         `Track is already in the queue: ${trackName} by ${artistName}.`
       );
     } else {
-      logInfo("Sending request to add track to queue.");
+      logInfo(
+        resolvePath("chatBot/logs"),
+        "Sending request to add track to queue."
+      );
       const addQueueResponse = await axios.post(
         `https://api.spotify.com/v1/me/player/queue?uri=${trackUri}`,
         null,
@@ -106,7 +115,10 @@ const addToQueue = async (
         }
       );
 
-      logInfo(`Add to queue response status: ${addQueueResponse.status}`);
+      logInfo(
+        resolvePath("chatBot/logs"),
+        `Add to queue response status: ${addQueueResponse.status}`
+      );
 
       if (addQueueResponse.status === 204 || addQueueResponse.status === 200) {
         client.say(
@@ -130,7 +142,7 @@ const addToQueue = async (
         channel,
         `No active Spotify device found. Please make sure Spotify is open and active on a device. ❌`
       );
-      logError("No active Spotify device found.");
+      logError(resolvePath("chatBot/logs"), "No active Spotify device found.");
     } else {
       throw error;
     }
@@ -178,17 +190,20 @@ const getTrackInfo = async (accessToken, trackId) => {
 const isChannelLive = async () => {
   try {
     const response = await axios.get(
-      `https://api.twitch.tv/helix/streams?user_id=${config.broadcasterId}`,
+      `https://api.twitch.tv/helix/streams?user_id=${config.BROADCASTER_ID}`,
       {
         headers: {
-          "Client-ID": config.clientId,
-          Authorization: `Bearer ${config.broadcasterToken}`,
+          "Client-ID": config.CLIENT_ID,
+          Authorization: `Bearer ${config.BROADCASTER_TOKEN}`,
         },
       }
     );
     return response.data.data.length > 0;
   } catch (error) {
-    logError(`Error checking stream status: ${error} ❌`);
+    logError(
+      resolvePath("chatBot/logs"),
+      `Error checking stream status: ${error} ❌`
+    );
     return false;
   }
 };
@@ -209,7 +224,7 @@ module.exports = {
    * @param {string} args - The command arguments.
    */
   async execute(client, channel, tags, args) {
-    logInfo("Executing songrequest command.");
+    logInfo(resolvePath("chatBot/logs"), "Executing songrequest command.");
 
     // Check if the user has the required permissions (Viewers have access by default)
     if (!checkPermissions(tags, "viewer")) {
@@ -238,7 +253,7 @@ module.exports = {
       }
 
       let query = args.trim();
-      logInfo(`Received query: ${query}`);
+      logInfo(resolvePath("chatBot/logs"), `Received query: ${query}`);
 
       const cacheKey = query.toLowerCase();
 
@@ -257,16 +272,19 @@ module.exports = {
       try {
         if (query.startsWith("https://open.spotify.com/track/")) {
           const trackId = extractTrackId(query);
-          logInfo(`Extracted track ID: ${trackId}`);
+          logInfo(
+            resolvePath("chatBot/logs"),
+            `Extracted track ID: ${trackId}`
+          );
 
           if (!trackId) {
             client.say(channel, "Invalid Spotify URL.");
             return;
           }
 
-          const trackInfo = await getTrackInfo(config.spotifyToken, trackId);
+          const trackInfo = await getTrackInfo(config.SPOTIFY_TOKEN, trackId);
           await addToQueue(
-            config.spotifyToken,
+            config.SPOTIFY_TOKEN,
             trackInfo.trackUri,
             trackInfo.trackName,
             trackInfo.artistName,
@@ -276,7 +294,7 @@ module.exports = {
           );
         } else {
           await songRequest(
-            config.spotifyToken,
+            config.SPOTIFY_TOKEN,
             query,
             cacheKey,
             channel,
@@ -312,6 +330,7 @@ module.exports = {
     } catch (error) {
       if (error.response) {
         logError(
+          resolvePath("chatBot/logs"),
           `Error response from Spotify API: ${
             error.response.status
           } - ${JSON.stringify(error.response.data)} ❌`
@@ -323,7 +342,11 @@ module.exports = {
           } - ${JSON.stringify(error.response.data)} ❌`
         );
       } else {
-        logError("Error processing request:", error);
+        logError(
+          resolvePath("chatBot/logs"),
+          "Error processing request:",
+          error
+        );
         client.say(channel, "Error processing request. ❌");
       }
     }

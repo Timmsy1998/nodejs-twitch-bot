@@ -1,8 +1,8 @@
 const fs = require("fs");
 const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
-const config = require(resolvePath("global.js")); // Adjusted to import global configurations
+const config = require(resolvePath("global.js")); // Import global configurations
 const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
-const { checkPermissions } = require(resolvePath(
+const checkPermissions = require(resolvePath(
   "chatBot/modules/handlers/permissionHandler"
 )); // Adjusted path for permission handler
 
@@ -20,7 +20,10 @@ module.exports = {
    * @param {string} args - The command arguments.
    */
   async execute(client, channel, tags, args) {
-    logInfo(`Clearquotes command called by ${tags.username}.`);
+    logInfo(
+      resolvePath("chatBot/logs"),
+      `Clearquotes command called by ${tags.username}.`
+    );
 
     // Check if the user has the required permissions (Only the broadcaster has access)
     if (!checkPermissions(tags, "broadcaster")) {
@@ -29,6 +32,7 @@ module.exports = {
         `@${tags.username}, you don't have permission to use this command. 🚫`
       );
       logError(
+        resolvePath("chatBot/logs"),
         `User ${tags.username} tried to use !clearquotes without permission. ❌`
       );
       return;
@@ -39,7 +43,10 @@ module.exports = {
       JSON.stringify({ quotes: [] }, null, 2),
       (err) => {
         if (err) {
-          logError(`Error clearing quotes file: ${err.message} ❌`);
+          logError(
+            resolvePath("chatBot/logs"),
+            `Error clearing quotes file: ${err.message} ❌`
+          );
           client.say(
             channel,
             `@${tags.username}, there was an error clearing the quotes. ❌`
@@ -47,7 +54,10 @@ module.exports = {
           return;
         }
         client.say(channel, "All quotes have been cleared. 📝");
-        logInfo(`All quotes cleared by ${tags.username}.`);
+        logInfo(
+          resolvePath("chatBot/logs"),
+          `All quotes cleared by ${tags.username}.`
+        );
       }
     );
   },

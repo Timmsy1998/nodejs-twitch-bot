@@ -1,12 +1,12 @@
 const axios = require("axios");
 const fs = require("fs");
 const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
-const config = require(resolvePath("global.js")); // Adjusted to import global configurations
+const config = require(resolvePath("global.js")); // Import global configurations
 const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
-const { checkPermissions } = require(resolvePath(
+const checkPermissions = require(resolvePath(
   "chatBot/modules/handlers/permissionHandler"
 )); // Adjusted path for permission handler
-const { handleCooldowns } = require(resolvePath(
+const handleCooldowns = require(resolvePath(
   "chatBot/modules/handlers/cooldownHandler"
 )); // Adjusted path for cooldown handler
 const {
@@ -67,7 +67,10 @@ module.exports = {
    * @param {string} args - The command arguments.
    */
   async execute(client, channel, tags, args) {
-    const commandName = "currentgame";
+    logInfo(
+      resolvePath("chatBot/logs"),
+      `Currentgame command called by ${tags.username}.`
+    );
 
     // Check if the user has the required permissions (Viewers have access by default)
     if (!checkPermissions(tags, "viewer")) {
@@ -93,6 +96,7 @@ module.exports = {
 
       for (const account of accountsData.accounts) {
         logInfo(
+          resolvePath("chatBot/logs"),
           `Checking if account is in a game: ${account.name} - ${account.tag} (${account.region})`
         );
 
@@ -102,19 +106,28 @@ module.exports = {
             account.tag,
             account.region
           );
-          logInfo(`Account data: ${JSON.stringify(accountData)}`);
+          logInfo(
+            resolvePath("chatBot/logs"),
+            `Account data: ${JSON.stringify(accountData)}`
+          );
 
           const summonerData = await getSummonerByPuuid(
             accountData.puuid,
             account.region
           );
-          logInfo(`Summoner data: ${JSON.stringify(summonerData)}`);
+          logInfo(
+            resolvePath("chatBot/logs"),
+            `Summoner data: ${JSON.stringify(summonerData)}`
+          );
 
           const gameInfo = await getCurrentGameInfo(
             summonerData.puuid,
             account.region
           );
-          logInfo(`Game info: ${JSON.stringify(gameInfo)}`);
+          logInfo(
+            resolvePath("chatBot/logs"),
+            `Game info: ${JSON.stringify(gameInfo)}`
+          );
 
           if (gameInfo && gameInfo.gameId) {
             foundGame = true;
@@ -123,7 +136,10 @@ module.exports = {
             for (const participant of gameInfo.participants) {
               const summonerName =
                 participant.summonerName || participant.summonerId;
-              logInfo(`Checking participant: ${summonerName}`);
+              logInfo(
+                resolvePath("chatBot/logs"),
+                `Checking participant: ${summonerName}`
+              );
 
               await delay(200); // Add a delay between API calls
 
@@ -132,6 +148,7 @@ module.exports = {
                 account.region
               );
               logInfo(
+                resolvePath("chatBot/logs"),
                 `Ranked stats for ${summonerName}: ${JSON.stringify(
                   rankedStats
                 )}`
@@ -150,7 +167,10 @@ module.exports = {
                 rankScore = unrankedScore;
               }
 
-              logInfo(`Rank score for ${summonerName}: ${rankScore}`);
+              logInfo(
+                resolvePath("chatBot/logs"),
+                `Rank score for ${summonerName}: ${rankScore}`
+              );
 
               if (participant.teamId === 100) {
                 teamRanks.blue.push(rankScore);
@@ -167,17 +187,29 @@ module.exports = {
               teamRanks.blue.concat(teamRanks.red).reduce((a, b) => a + b, 0) /
               (teamRanks.blue.length + teamRanks.red.length);
 
-            logInfo(`Blue Team Avg Score: ${blueTeamAvg}`);
-            logInfo(`Red Team Avg Score: ${redTeamAvg}`);
-            logInfo(`Game Avg Score: ${gameAvg}`);
+            logInfo(
+              resolvePath("chatBot/logs"),
+              `Blue Team Avg Score: ${blueTeamAvg}`
+            );
+            logInfo(
+              resolvePath("chatBot/logs"),
+              `Red Team Avg Score: ${redTeamAvg}`
+            );
+            logInfo(resolvePath("chatBot/logs"), `Game Avg Score: ${gameAvg}`);
 
             const blueTeamRank = getRankName(Math.round(blueTeamAvg));
             const redTeamRank = getRankName(Math.round(redTeamAvg));
             const gameRank = getRankName(Math.round(gameAvg));
 
-            logInfo(`Blue Team Rank: ${blueTeamRank}`);
-            logInfo(`Red Team Rank: ${redTeamRank}`);
-            logInfo(`Game Rank: ${gameRank}`);
+            logInfo(
+              resolvePath("chatBot/logs"),
+              `Blue Team Rank: ${blueTeamRank}`
+            );
+            logInfo(
+              resolvePath("chatBot/logs"),
+              `Red Team Rank: ${redTeamRank}`
+            );
+            logInfo(resolvePath("chatBot/logs"), `Game Rank: ${gameRank}`);
 
             client.say(
               channel,
@@ -189,9 +221,11 @@ module.exports = {
           }
         } catch (error) {
           logError(
+            resolvePath("chatBot/logs"),
             `Error checking account: ${account.name} - ${account.tag} (${account.region})`
           );
           logError(
+            resolvePath("chatBot/logs"),
             `API Error: ${
               error.response
                 ? JSON.stringify(error.response.data)
@@ -209,6 +243,7 @@ module.exports = {
       }
     } catch (error) {
       logError(
+        resolvePath("chatBot/logs"),
         `Error checking accounts: ${
           error.response ? JSON.stringify(error.response.data) : error.message
         }`

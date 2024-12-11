@@ -2,10 +2,10 @@ const axios = require("axios");
 const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
 const config = require(resolvePath("global.js")); // Adjusted to import global configurations
 const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
-const { checkPermissions } = require(resolvePath(
+const checkPermissions = require(resolvePath(
   "chatBot/modules/handlers/permissionHandler"
 )); // Adjusted path for permission handler
-const { handleCooldowns } = require(resolvePath(
+const handleCooldowns = require(resolvePath(
   "chatBot/modules/handlers/cooldownHandler"
 )); // Adjusted path for cooldown handler
 
@@ -26,13 +26,20 @@ module.exports = {
    * @param {string} args - The command arguments.
    */
   async execute(client, channel, tags, args) {
-    logInfo(`Clip command called by ${tags.username}. 🎬`);
+    logInfo(
+      resolvePath("chatBot/logs"),
+      `Clip command called by ${tags.username}. 🎬`
+    );
 
     // Check if the user has the required permissions (Viewers have access by default)
     if (!checkPermissions(tags, "viewer")) {
       client.say(
         channel,
         `@${tags.username}, you don't have permission to use this command. 🚫`
+      );
+      logError(
+        resolvePath("chatBot/logs"),
+        `User ${tags.username} tried to use !clip without permission. ❌`
       );
       return;
     }
@@ -44,8 +51,8 @@ module.exports = {
       return; // Exit if the command is on cooldown
     }
 
-    const broadcasterId = config.broadcasterId; // Your Twitch broadcaster ID
-    const accessToken = config.broadcasterToken; // Your Twitch access token
+    const broadcasterId = config.BROADCASTER_ID; // Your Twitch broadcaster ID
+    const accessToken = config.BROADCASTER_TOKEN; // Your Twitch access token
 
     try {
       // Notify chat about the clip creation
@@ -57,7 +64,7 @@ module.exports = {
         null,
         {
           headers: {
-            "Client-ID": config.clientId,
+            "Client-ID": config.CLIENT_ID,
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
@@ -67,14 +74,18 @@ module.exports = {
       const clipData = response.data.data[0];
       const editUrl = clipData.edit_url;
 
-      logInfo(`Clip created: ${JSON.stringify(clipData)}`);
+      logInfo(
+        resolvePath("chatBot/logs"),
+        `Clip created: ${JSON.stringify(clipData)}`
+      );
 
       // Notify chat with the edit URL
       client.say(channel, `Clip created! You can edit it here: ${editUrl}`);
     } catch (error) {
       logError(
+        resolvePath("chatBot/logs"),
         `Error creating clip: ${
-          error.response ? error.response.data : error.message
+          error.response ? JSON.stringify(error.response.data) : error.message
         } ❌`
       );
       client.say(

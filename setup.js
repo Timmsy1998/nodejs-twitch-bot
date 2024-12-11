@@ -2,13 +2,23 @@ const fs = require("fs");
 const { exec } = require("child_process");
 const inquirer = require("inquirer");
 const axios = require("axios");
-const express = require("express");
-const bodyParser = require("body-parser");
-const qs = require("qs");
+const path = require("path");
 const { resolvePath } = require("./pathHelper");
 
 // Directory for dataStorage
 const dataStorageDir = resolvePath("dataStorage");
+
+// Directory for config files
+const configDir = resolvePath("config");
+
+// Ensure dataStorage and config directories exist
+if (!fs.existsSync(dataStorageDir)) {
+  fs.mkdirSync(dataStorageDir, { recursive: true });
+}
+
+if (!fs.existsSync(configDir)) {
+  fs.mkdirSync(configDir, { recursive: true });
+}
 
 // Files to be created in dataStorage with initial content
 const filesToCreate = {
@@ -23,16 +33,59 @@ const filesToCreate = {
   },
 };
 
-// Ensure dataStorage directory exists
-if (!fs.existsSync(dataStorageDir)) {
-  fs.mkdirSync(dataStorageDir, { recursive: true });
-}
+// Ensure config files with initial empty values
+const configFiles = {
+  "botConfig.js": {
+    BOT_NICKNAME: "",
+    BROADCASTER_NICKNAME: "",
+    DEFAULT_COOLDOWN: 0,
+  },
+  "lolConfig.js": {
+    RIOT_API_KEY: "",
+    DEFAULT_REGION: "",
+  },
+  "serverConfig.js": {
+    port: 0,
+    host: "",
+  },
+  "spotifyConfig.js": {
+    SPOTIFY_REDIRECT_URI: "",
+    SPOTIFY_CLIENT_ID: "",
+    SPOTIFY_CLIENT_SECRET: "",
+    SPOTIFY_TOKEN: "",
+    SPOTIFY_REFRESH_TOKEN: "",
+  },
+  "twitchConfig.js": {
+    BOT_USERNAME: "",
+    BOT_TOKEN: "",
+    CLIENT_ID: "",
+    BROADCASTER_USERNAME: "",
+    BROADCASTER_ID: "",
+    BROADCASTER_TOKEN: "",
+    REDIRECT_URI: "",
+  },
+};
 
 // Create necessary files in dataStorage with initial content
 Object.entries(filesToCreate).forEach(([file, content]) => {
   const filePath = path.join(dataStorageDir, file);
   if (!fs.existsSync(filePath)) {
     fs.writeFileSync(filePath, JSON.stringify(content, null, 2), "utf8");
+    console.log(`Created ${file}`);
+  } else {
+    console.log(`${file} already exists`);
+  }
+});
+
+// Create necessary config files with initial empty values
+Object.entries(configFiles).forEach(([file, content]) => {
+  const filePath = path.join(configDir, file);
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(
+      filePath,
+      `module.exports = ${JSON.stringify(content, null, 2)};`,
+      "utf8"
+    );
     console.log(`Created ${file}`);
   } else {
     console.log(`${file} already exists`);
@@ -271,30 +324,44 @@ const collectEnvVariables = async () => {
     }
   }
 
-  // Prepare content for .env file
-  const envContent = `
-# Twitch Configuration
-BOT_USERNAME=${answers.BOT_USERNAME}
-BOT_TOKEN=${answers.BOT_TOKEN}
-CLIENT_ID=${answers.CLIENT_ID}
-BROADCASTER_USERNAME=${answers.BROADCASTER_USERNAME}
-BROADCASTER_TOKEN=${tokenAnswer.BROADCASTER_TOKEN}
-REDIRECT_URI=${answers.REDIRECT_URI}
+  // Write the configuration files with collected environment variables
+  const writeConfigFile = (filename, configData) => {
+    const filePath = resolvePath(`./config/${filename}.js`);
+    const content = `module.exports = ${JSON.stringify(configData, null, 2)};`;
+    fs.writeFileSync(filePath, content, "utf8");
+    console.log(`${filename}.js file has been created/updated successfully!`);
+  };
 
-# Riot Games API Configuration
-RIOT_API_KEY=${answers.RIOT_API_KEY}
+  // Prepare content for Twitch config
+  const twitchConfig = {
+    BOT_USERNAME: answers.BOT_USERNAME,
+    BOT_TOKEN: answers.BOT_TOKEN,
+    CLIENT_ID: answers.CLIENT_ID,
+    BROADCASTER_USERNAME: answers.BROADCASTER_USERNAME,
+    BROADCASTER_TOKEN: tokenAnswer.BROADCASTER_TOKEN,
+    REDIRECT_URI: answers.REDIRECT_URI,
+    BROADCASTER_ID: "",
+  };
 
-# Spotify Configuration
-SPOTIFY_REDIRECT_URI=${answers.SPOTIFY_REDIRECT_URI}
-SPOTIFY_CLIENT_ID=${answers.SPOTIFY_CLIENT_ID}
-SPOTIFY_CLIENT_SECRET=${answers.SPOTIFY_CLIENT_SECRET}
-SPOTIFY_TOKEN=${spotifyTokens.SPOTIFY_TOKEN}
-SPOTIFY_REFRESH_TOKEN=${spotifyTokens.SPOTIFY_REFRESH_TOKEN}
-  `;
+  // Prepare content for Riot Games config
+  const riotGamesConfig = {
+    RIOT_API_KEY: answers.RIOT_API_KEY,
+    DEFAULT_REGION: "",
+  };
 
-  // Write the .env file with collected environment variables
-  fs.writeFileSync(resolvePath(".env"), envContent.trim(), "utf8");
-  console.log(".env file has been created successfully!");
+  // Prepare content for Spotify config
+  const spotifyConfig = {
+    SPOTIFY_REDIRECT_URI: answers.SPOTIFY_REDIRECT_URI,
+    SPOTIFY_CLIENT_ID: answers.SPOTIFY_CLIENT_ID,
+    SPOTIFY_CLIENT_SECRET: answers.SPOTIFY_CLIENT_SECRET,
+    SPOTIFY_TOKEN: spotifyTokens.SPOTIFY_TOKEN,
+    SPOTIFY_REFRESH_TOKEN: spotifyTokens.SPOTIFY_REFRESH_TOKEN,
+  };
+
+  // Write the configuration files
+  writeConfigFile("twitchConfig", twitchConfig);
+  writeConfigFile("lolConfig", riotGamesConfig);
+  writeConfigFile("spotifyConfig", spotifyConfig);
 
   // Fetch Broadcaster ID using the provided token
   try {
@@ -308,11 +375,12 @@ SPOTIFY_REFRESH_TOKEN=${spotifyTokens.SPOTIFY_REFRESH_TOKEN}
     const broadcasterId = response.data.data[0].id;
     console.log(`Broadcaster ID: ${broadcasterId}`);
 
-    // Update the .env file with the Broadcaster ID
-    const updatedEnvContent =
-      envContent.trim() + `\nBROADCASTER_ID=${broadcasterId}`;
-    fs.writeFileSync(resolvePath(".env"), updatedEnvContent, "utf8");
-    console.log("Broadcaster ID has been added to the .env file successfully!");
+    // Update Twitch config file with the Broadcaster ID
+    twitchConfig.BROADCASTER_ID = broadcasterId;
+    writeConfigFile("twitchConfig", twitchConfig);
+    console.log(
+      "Broadcaster ID has been added to the Twitch config file successfully!"
+    );
   } catch (error) {
     console.error(`Error fetching Broadcaster ID: ${error.message}`);
   }

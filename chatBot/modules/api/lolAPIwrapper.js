@@ -49,7 +49,7 @@ const createRiotApiInstance = (region, service, version = "v1") => {
   return axios.create({
     baseURL: `https://${riotRegion}.api.riotgames.com/lol/${service}/${version}`,
     headers: {
-      "X-Riot-Token": config.riotApiKey,
+      "X-Riot-Token": config.RIOT_API_KEY,
     },
   });
 };
@@ -71,7 +71,7 @@ const createRiotApiInstanceLong = (region, service, version = "v1") => {
   return axios.create({
     baseURL: `https://${riotRegion}.api.riotgames.com/riot/${service}/${version}`,
     headers: {
-      "X-Riot-Token": config.riotApiKey,
+      "X-Riot-Token": config.RIOT_API_KEY,
     },
   });
 };

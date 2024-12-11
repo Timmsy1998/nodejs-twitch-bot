@@ -1,15 +1,40 @@
 const axios = require("axios");
-const fs = require("fs");
-const { resolvePath } = require("../../pathHelper"); // Importing resolvePath from pathHelper.js
 const querystring = require("querystring");
+const { resolvePath } = require("../../pathHelper"); // Importing path resolution helper
 const config = require(resolvePath("global.js")); // Import shared global configuration
 const { logError, logInfo } = require(resolvePath("logger.js")); // Import shared logger
+const refreshSpotifyToken = require(resolvePath(
+  "chatBot/modules/utils/refreshSpotifyToken"
+)); // Importing the refresh token function
+const fs = require("fs");
 
+/**
+ * Updates the Spotify config file with new tokens
+ * @param {object} newTokens - The new Spotify tokens to update
+ */
+const updateSpotifyConfig = (newTokens) => {
+  const spotifyConfigPath = resolvePath("config/spotifyConfig.js");
+  const currentConfig = require(spotifyConfigPath);
+  const updatedConfig = {
+    ...currentConfig,
+    ...newTokens,
+  };
+  const content = `module.exports = ${JSON.stringify(updatedConfig, null, 2)};`;
+  fs.writeFileSync(spotifyConfigPath, content, "utf8");
+};
+
+/**
+ * Sets up Spotify-related routes for the Express application.
+ * @param {object} app - The Express application instance.
+ */
 const setupSpotifyRoutes = (app) => {
-  // Route to generate Spotify authorization URL
+  /**
+   * GET /login
+   * Redirects the user to Spotify's authorization page.
+   */
   app.get("/login", (req, res) => {
-    const clientId = config.spotifyClientId;
-    const redirectUri = config.spotifyRedirectUri;
+    const clientId = config.SPOTIFY_CLIENT_ID;
+    const redirectUri = config.SPOTIFY_REDIRECT_URI;
     const scopes = [
       "streaming",
       "user-read-email",
@@ -38,15 +63,19 @@ const setupSpotifyRoutes = (app) => {
       }
     )}`;
 
-    res.redirect(authUrl); // Redirect the user to Spotify's authorization page
+    // Redirect the user to Spotify's authorization page
+    res.redirect(authUrl);
   });
 
-  // Spotify OAuth callback route
+  /**
+   * GET /spotify-callback
+   * Handles the callback from Spotify's authorization, exchanges authorization code for access and refresh tokens, and updates the Spotify config file.
+   */
   app.get("/spotify-callback", async (req, res) => {
     const code = req.query.code;
-    const redirectUri = config.spotifyRedirectUri;
-    const clientId = config.spotifyClientId;
-    const clientSecret = config.spotifyClientSecret;
+    const redirectUri = config.SPOTIFY_REDIRECT_URI;
+    const clientId = config.SPOTIFY_CLIENT_ID;
+    const clientSecret = config.SPOTIFY_CLIENT_SECRET;
 
     try {
       // Exchange authorization code for access and refresh tokens
@@ -54,35 +83,25 @@ const setupSpotifyRoutes = (app) => {
         "https://accounts.spotify.com/api/token",
         new URLSearchParams({
           grant_type: "authorization_code",
-          code: code,
+          code,
           redirect_uri: redirectUri,
           client_id: clientId,
           client_secret: clientSecret,
         }),
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
+        { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
       );
 
       const accessToken = response.data.access_token;
       const refreshToken = response.data.refresh_token;
       const grantedScopes = response.data.scope.split(" ");
 
-      // Store tokens globally
-      global.spotifyAccessToken = accessToken;
-      global.spotifyRefreshToken = refreshToken;
+      // Update the Spotify config file with new tokens
+      updateSpotifyConfig({
+        SPOTIFY_TOKEN: accessToken,
+        SPOTIFY_REFRESH_TOKEN: refreshToken,
+      });
 
-      // Update config with new tokens
-      config.spotifyToken = accessToken;
-      config.spotifyRefreshToken = refreshToken;
-      fs.writeFileSync(
-        resolvePath("global.js"),
-        `module.exports = ${JSON.stringify(config, null, 2)};`
-      );
-
-      // Send a response with the tokens and granted scopes
+      // Respond with the tokens and granted scopes
       res.send(`
         <!DOCTYPE html>
         <html lang="en">
@@ -110,14 +129,23 @@ const setupSpotifyRoutes = (app) => {
         </body>
         </html>
       `);
-      logInfo("Spotify access token received: " + accessToken);
-      logInfo("Spotify refresh token received: " + refreshToken);
 
-      startTokenRefreshScheduler(); // Start the token refresh scheduler
+      logInfo(
+        "webServer/logs",
+        `Spotify access token received: ${accessToken}`
+      );
+      logInfo(
+        "webServer/logs",
+        `Spotify refresh token received: ${refreshToken}`
+      );
+
+      startTokenRefreshScheduler();
     } catch (error) {
       logError(
-        "Error getting Spotify access token: " +
-          (error.response ? error.response.data : error.message)
+        "webServer/logs",
+        `Error getting Spotify access token: ${
+          error.response ? JSON.stringify(error.response.data) : error.message
+        }`
       );
       res
         .status(500)
@@ -129,162 +157,92 @@ const setupSpotifyRoutes = (app) => {
     }
   });
 
-  // Route to fetch Spotify Now Playing information
+  /**
+   * GET /spotify-now-playing
+   * Retrieves the currently playing track from Spotify. Refreshes the access token if expired.
+   */
   app.get("/spotify-now-playing", async (req, res) => {
-    const spotifyAccessToken = global.spotifyAccessToken;
-
-    if (!spotifyAccessToken) {
-      return res.status(401).json({ error: "No Spotify token provided" });
-    }
-
     try {
-      const response = await axios.get(
-        "https://api.spotify.com/v1/me/player/currently-playing",
-        {
-          headers: {
-            Authorization: `Bearer ${spotifyAccessToken}`,
-          },
-        }
+      let spotifyAccessToken = config.SPOTIFY_TOKEN;
+      logInfo(
+        "webServer/logs",
+        `Spotify access token used: ${spotifyAccessToken}`
       );
-      res.json(response.data);
+
+      const response = await fetchNowPlayingData(spotifyAccessToken);
+
+      if (response.status === 401) {
+        // Access token has expired, refresh it
+        const newAccessToken = await refreshSpotifyToken();
+        spotifyAccessToken = newAccessToken;
+        updateSpotifyConfig({ SPOTIFY_TOKEN: newAccessToken }); // Update the Spotify config with the new access token
+        const retryResponse = await fetchNowPlayingData(spotifyAccessToken);
+        res.json(retryResponse.data);
+      } else if (response.status === 200) {
+        // Successfully retrieved data
+        res.json(response.data);
+      } else {
+        throw new Error("Failed to fetch Now Playing data");
+      }
     } catch (error) {
-      logError("Error fetching Spotify Now Playing: " + error.response.data);
+      logError(
+        "webServer/logs",
+        `Error fetching Spotify Now Playing: ${
+          error.response ? JSON.stringify(error.response.data) : error.message
+        }`
+      );
       res
         .status(500)
         .send(
-          `Error fetching Spotify Now Playing: ${JSON.stringify(
-            error.response.data
-          )}`
+          `Error fetching Spotify Now Playing: ${
+            error.response ? JSON.stringify(error.response.data) : error.message
+          }`
         );
     }
   });
 
-  // Route to refresh Spotify access token
+  /**
+   * GET /refresh-token
+   * Refreshes the Spotify access token and updates the Spotify config file.
+   */
   app.get("/refresh-token", async (req, res) => {
-    await refreshSpotifyToken();
+    const newAccessToken = await refreshSpotifyToken();
+    updateSpotifyConfig({ SPOTIFY_TOKEN: newAccessToken }); // Update the Spotify config with the new access token
     res.sendStatus(200);
-  });
-
-  // Route to clear Spotify queue
-  app.get("/clear-queue", async (req, res) => {
-    const accessToken = global.spotifyAccessToken;
-
-    if (!accessToken) {
-      return res.status(401).json({ error: "No Spotify token provided" });
-    }
-
-    try {
-      // Pause playback
-      await axios.put(
-        "https://api.spotify.com/v1/me/player/pause",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      // Function to clear the queue
-      const clearQueue = async () => {
-        while (true) {
-          // Get current playback state
-          const playbackResponse = await axios.get(
-            "https://api.spotify.com/v1/me/player",
-            {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-              },
-            }
-          );
-
-          // Check if there is a track currently playing
-          if (!playbackResponse.data || !playbackResponse.data.item) {
-            break;
-          }
-
-          // Skip to the next track
-          await axios.post(
-            "https://api.spotify.com/v1/me/player/next",
-            {},
-            {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-              },
-            }
-          );
-
-          // Add a delay to ensure the next API is called properly
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        }
-      };
-
-      // Clear the queue
-      await clearQueue();
-
-      res.status(200).send("Queue cleared.");
-    } catch (error) {
-      logError(
-        "Error clearing Spotify queue: " +
-          (error.response ? error.response.data : error.message)
-      );
-      res.status(500).json({ error: "Error clearing queue." });
-    }
   });
 };
 
-// Function to refresh Spotify access token
-async function refreshSpotifyToken() {
-  const refreshToken = config.spotifyRefreshToken;
-  const clientId = config.spotifyClientId;
-  const clientSecret = config.spotifyClientSecret;
-
-  if (!refreshToken) {
-    logError("No refresh token available");
-    return;
-  }
-
+/**
+ * Fetches the currently playing track from Spotify.
+ * @param {string} accessToken - The Spotify access token.
+ * @returns {object} The response from Spotify API.
+ */
+const fetchNowPlayingData = async (accessToken) => {
   try {
-    const response = await axios.post(
-      "https://accounts.spotify.com/api/token",
-      new URLSearchParams({
-        grant_type: "refresh_token",
-        refresh_token: refreshToken,
-        client_id: clientId,
-        client_secret: clientSecret,
-      }),
+    const response = await axios.get(
+      "https://api.spotify.com/v1/me/player/currently-playing",
       {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
+        headers: { Authorization: `Bearer ${accessToken}` },
       }
     );
-
-    const newAccessToken = response.data.access_token;
-    global.spotifyAccessToken = newAccessToken; // Save the new access token
-
-    // Update the config file with the new access token
-    config.spotifyToken = newAccessToken;
-    fs.writeFileSync(
-      resolvePath("global.js"),
-      `module.exports = ${JSON.stringify(config, null, 2)};`
-    );
-
-    logInfo("Spotify access token refreshed: " + newAccessToken);
+    return response;
   } catch (error) {
-    logError("Error refreshing Spotify access token: " + error.response.data);
+    return error.response;
   }
-}
+};
 
-// Scheduler to refresh Spotify token every 50 minutes
+/**
+ * Starts a scheduler to refresh the Spotify access token every 50 minutes.
+ */
 function startTokenRefreshScheduler() {
   setInterval(async () => {
-    logInfo("Refreshing Spotify token...");
-    await refreshSpotifyToken();
-  }, 50 * 60 * 1000); // 50 minutes
+    logInfo("webServer/logs", "Refreshing Spotify token...");
+    const newAccessToken = await refreshSpotifyToken();
+    updateSpotifyConfig({ SPOTIFY_TOKEN: newAccessToken }); // Update the Spotify config with the new access token
+  }, 50 * 60 * 1000); // Refresh token every 50 minutes
 }
 
-// Start the token refresh scheduler on server startup
 startTokenRefreshScheduler();
 
+// Export the setup function to initialize Spotify routes
 module.exports = setupSpotifyRoutes;

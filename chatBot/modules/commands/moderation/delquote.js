@@ -1,11 +1,11 @@
 const fs = require("fs");
 const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
-const config = require(resolvePath("global.js")); // Adjusted to import global configurations
+const config = require(resolvePath("global.js")); // Import global configurations
 const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
-const { checkPermissions } = require(resolvePath(
+const checkPermissions = require(resolvePath(
   "chatBot/modules/handlers/permissionHandler"
 )); // Adjusted path for permission handler
-const { handleCooldowns } = require(resolvePath(
+const handleCooldowns = require(resolvePath(
   "chatBot/modules/handlers/cooldownHandler"
 )); // Adjusted path for cooldown handler
 
@@ -26,13 +26,20 @@ module.exports = {
    * @param {string} args - The command arguments.
    */
   async execute(client, channel, tags, args) {
-    logInfo(`Delquote command called by ${tags.username}.`);
+    logInfo(
+      resolvePath("chatBot/logs"),
+      `Delquote command called by ${tags.username}.`
+    );
 
     // Check if the user has the required permissions (Only Moderators have access)
     if (!checkPermissions(tags, "moderator")) {
       client.say(
         channel,
         `@${tags.username}, you don't have permission to use this command. 🚫`
+      );
+      logError(
+        resolvePath("chatBot/logs"),
+        `User ${tags.username} tried to use !delquote without permission. ❌`
       );
       return;
     }
@@ -51,7 +58,10 @@ module.exports = {
       "utf8",
       (err, data) => {
         if (err) {
-          logError(`Error reading quotes file: ${err.message} ❌`);
+          logError(
+            resolvePath("chatBot/logs"),
+            `Error reading quotes file: ${err.message} ❌`
+          );
           client.say(
             channel,
             `@${tags.username}, there was an error deleting the quote. ❌`
@@ -67,7 +77,10 @@ module.exports = {
             JSON.stringify({ quotes }, null, 2),
             (err) => {
               if (err) {
-                logError(`Error writing to quotes file: ${err.message} ❌`);
+                logError(
+                  resolvePath("chatBot/logs"),
+                  `Error writing to quotes file: ${err.message} ❌`
+                );
                 client.say(
                   channel,
                   `@${tags.username}, there was an error deleting the quote. ❌`
@@ -78,13 +91,20 @@ module.exports = {
                 channel,
                 `Quote ${quoteNumber + 1} deleted: ${removedQuote}`
               );
-              logInfo(`Quote deleted by ${tags.username}: ${removedQuote}`);
+              logInfo(
+                resolvePath("chatBot/logs"),
+                `Quote deleted by ${tags.username}: ${removedQuote}`
+              );
             }
           );
         } else {
           client.say(
             channel,
             `@${tags.username}, that quote number doesn't exist. ❌`
+          );
+          logInfo(
+            resolvePath("chatBot/logs"),
+            `Quote number ${quoteNumber + 1} does not exist.`
           );
         }
       }

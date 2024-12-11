@@ -1,9 +1,9 @@
 const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
 const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
-const { checkPermissions } = require(resolvePath(
+const checkPermissions = require(resolvePath(
   "chatBot/modules/handlers/permissionHandler"
 )); // Adjusted path for permission handler
-const { handleCooldowns } = require(resolvePath(
+const handleCooldowns = require(resolvePath(
   "chatBot/modules/handlers/cooldownHandler"
 )); // Adjusted path for cooldown handler
 
@@ -24,13 +24,20 @@ module.exports = {
    * @param {string} args - The command arguments.
    */
   async execute(client, channel, tags, args) {
-    logInfo(`Discord command called by ${tags.username}.`);
+    logInfo(
+      resolvePath("chatBot/logs"),
+      `Discord command called by ${tags.username}.`
+    );
 
     // Check if the user has the required permissions (Viewers have access by default)
     if (!checkPermissions(tags, "viewer")) {
       client.say(
         channel,
         `@${tags.username}, you do not have permission to use this command. 🚫`
+      );
+      logError(
+        resolvePath("chatBot/logs"),
+        `User ${tags.username} tried to use !discord without permission. ❌`
       );
       return;
     }
@@ -45,9 +52,15 @@ module.exports = {
     try {
       const message = "Join The Gathering Today: https://discord.gg/24wA6Hy2mc";
       client.say(channel, message);
-      logInfo(`Sent Discord invite link in response to ${tags.username}.`);
+      logInfo(
+        resolvePath("chatBot/logs"),
+        `Sent Discord invite link in response to ${tags.username}.`
+      );
     } catch (error) {
-      logError(`Error sending Discord invite link: ${error.message} ❌`);
+      logError(
+        resolvePath("chatBot/logs"),
+        `Error sending Discord invite link: ${error.message} ❌`
+      );
       client.say(
         channel,
         `@${tags.username}, there was an error sending the Discord invite link. ❌`

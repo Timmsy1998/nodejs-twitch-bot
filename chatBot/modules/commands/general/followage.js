@@ -3,10 +3,10 @@ const fs = require("fs");
 const { resolvePath } = require("../../../../pathHelper"); // Importing resolvePath from pathHelper.js
 const config = require(resolvePath("global.js")); // Adjusted to import global configurations
 const { logError, logInfo } = require(resolvePath("logger.js")); // Adjusted to import logger
-const { checkPermissions } = require(resolvePath(
+const checkPermissions = require(resolvePath(
   "chatBot/modules/handlers/permissionHandler"
 )); // Adjusted path for permission handler
-const { handleCooldowns } = require(resolvePath(
+const handleCooldowns = require(resolvePath(
   "chatBot/modules/handlers/cooldownHandler"
 )); // Adjusted path for cooldown handler
 
@@ -54,6 +54,7 @@ module.exports = {
   async execute(client, channel, tags, args) {
     const username = args[0] || tags.username;
     logInfo(
+      resolvePath("chatBot/logs"),
       `Followage command called by ${tags.username} for user ${username}.`
     );
 
@@ -62,6 +63,10 @@ module.exports = {
       client.say(
         channel,
         `@${tags.username}, you don't have permission to use this command. 🚫`
+      );
+      logError(
+        resolvePath("chatBot/logs"),
+        `User ${tags.username} tried to use !followage without permission. ❌`
       );
       return;
     }
@@ -73,12 +78,13 @@ module.exports = {
       return; // Exit if the command is on cooldown
     }
 
-    if (username.toLowerCase() === config.broadcasterUsername.toLowerCase()) {
+    if (username.toLowerCase() === config.BROADCASTER_USERNAME.toLowerCase()) {
       client.say(
         channel,
         `You can't follow yourself, numnuts. Don't have an ego. 😜`
       );
       logInfo(
+        resolvePath("chatBot/logs"),
         `Followage command executed by ${tags.username}: Attempt to check own followage.`
       );
       return;
@@ -96,6 +102,7 @@ module.exports = {
         `@${username} has been following for ${followage} days.`
       );
       logInfo(
+        resolvePath("chatBot/logs"),
         `Followage command executed by ${tags.username}: ${followage} days for ${username}`
       );
     } else {
@@ -104,8 +111,8 @@ module.exports = {
           `https://api.twitch.tv/helix/users?login=${username}`,
           {
             headers: {
-              "Client-ID": config.clientId,
-              Authorization: `Bearer ${config.broadcasterToken}`,
+              "Client-ID": config.CLIENT_ID,
+              Authorization: `Bearer ${config.BROADCASTER_TOKEN}`,
             },
           }
         );
@@ -114,11 +121,11 @@ module.exports = {
           const userId = userResponse.data.data[0].id;
 
           const followResponse = await axios.get(
-            `https://api.twitch.tv/helix/channels/followers?broadcaster_id=${config.broadcasterId}&user_id=${userId}`,
+            `https://api.twitch.tv/helix/channels/followers?broadcaster_id=${config.BROADCASTER_ID}&user_id=${userId}`,
             {
               headers: {
-                "Client-ID": config.clientId,
-                Authorization: `Bearer ${config.broadcasterToken}`,
+                "Client-ID": config.CLIENT_ID,
+                Authorization: `Bearer ${config.BROADCASTER_TOKEN}`,
               },
             }
           );
@@ -136,11 +143,13 @@ module.exports = {
               `@${username} has been following for ${followage} days.`
             );
             logInfo(
+              resolvePath("chatBot/logs"),
               `Followage command executed by ${tags.username}: ${followage} days for ${username}`
             );
           } else {
             client.say(channel, `@${username} is not following the channel.`);
             logInfo(
+              resolvePath("chatBot/logs"),
               `Followage command executed by ${tags.username}: ${username} is not following.`
             );
           }
@@ -150,11 +159,13 @@ module.exports = {
             `@${tags.username}, the username "${username}" was not found.`
           );
           logError(
+            resolvePath("chatBot/logs"),
             `Followage command executed by ${tags.username}: Username "${username}" not found.`
           );
         }
       } catch (error) {
         logError(
+          resolvePath("chatBot/logs"),
           `Error fetching followage: ${
             error.response
               ? JSON.stringify(error.response.data, null, 2)

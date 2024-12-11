@@ -19,8 +19,8 @@ logConsole(logDir, "Bot is starting... 🚀");
 const client = new tmi.Client({
   options: { debug: true },
   connection: { reconnect: true, secure: true },
-  identity: { username: config.botUsername, password: config.botToken },
-  channels: [config.broadcasterUsername],
+  identity: { username: config.BOT_USERNAME, password: config.BOT_TOKEN },
+  channels: [config.BROADCASTER_USERNAME],
 });
 
 client.commands = new Map();
@@ -72,11 +72,11 @@ client.connect().catch((error) => {
 const isChannelLive = async () => {
   try {
     const response = await axios.get(
-      `https://api.twitch.tv/helix/streams?user_id=${config.broadcasterId}`,
+      `https://api.twitch.tv/helix/streams?user_id=${config.BROADCASTER_ID}`,
       {
         headers: {
-          "Client-ID": config.clientId,
-          Authorization: `Bearer ${config.broadcasterToken}`,
+          "Client-ID": config.CLIENT_ID,
+          Authorization: `Bearer ${config.BROADCASTER_TOKEN}`,
         },
       }
     );
@@ -93,7 +93,7 @@ if (discordCommand) {
   setInterval(async () => {
     const isLive = await isChannelLive();
     if (isLive) {
-      discordCommand.execute(client, config.broadcasterUsername);
+      discordCommand.execute(client, config.BROADCASTER_USERNAME);
     } else {
       logInfo(
         logDir,
