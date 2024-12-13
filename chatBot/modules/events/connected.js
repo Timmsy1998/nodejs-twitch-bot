@@ -1,9 +1,8 @@
 const { resolvePath } = require("../../../pathHelper"); // Importing resolvePath from pathHelper.js
 const { logInfo, logError } = require(resolvePath("logger.js")); // Adjusted path for logger
 const config = require(resolvePath("global.js")); // Import global configuration
-const client = require(resolvePath("chatBot/main")); // Adjusted path for client import
 
-module.exports = (addr, port) => {
+module.exports = (client, addr, port) => {
   try {
     console.log(`* Connected to ${addr}:${port} 🚀`);
     logInfo(

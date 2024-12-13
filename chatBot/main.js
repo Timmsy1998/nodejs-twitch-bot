@@ -61,7 +61,7 @@ const commandDirs = [
 ];
 commandDirs.forEach(loadCommands);
 
-client.on("connected", onConnectedHandler);
+client.on("connected", (addr, port) => onConnectedHandler(client, addr, port));
 client.on("message", createMessageHandler(client));
 
 client.connect().catch((error) => {
